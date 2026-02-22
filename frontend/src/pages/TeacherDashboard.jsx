@@ -11,6 +11,7 @@ import {
   ChevronUp,
   CalendarDays,
   ArrowLeft,
+  XCircle,
 } from "lucide-react";
 
 const TeacherDashboard = () => {
@@ -24,6 +25,7 @@ const TeacherDashboard = () => {
 
   // History state
   const [subjects, setSubjects] = useState([]);
+  const [allStudents, setAllStudents] = useState([]);
   const [selectedSubject, setSelectedSubject] = useState(null);
   const [expandedSession, setExpandedSession] = useState(null);
 
@@ -55,6 +57,7 @@ const TeacherDashboard = () => {
     try {
       const res = await api.get("/session/history");
       setSubjects(res.data.subjects || []);
+      setAllStudents(res.data.allStudents || []);
     } catch (err) {
       console.error("Failed to fetch history", err);
     }
@@ -121,6 +124,21 @@ const TeacherDashboard = () => {
       if (activeTab === "history") fetchHistory(); // Refresh history after ending
     } catch (err) {
       console.error("Failed to end session");
+    }
+  };
+
+  const handleOverride = async (sessionId, studentId, currentStatus) => {
+    try {
+      const newStatus = currentStatus === "PRESENT" ? "ABSENT" : "PRESENT";
+      await api.post("/session/override", {
+        sessionId,
+        studentId,
+        status: newStatus,
+      });
+      fetchHistory(); // refresh data
+    } catch (err) {
+      console.error("Failed to override attendance", err);
+      setError("Failed to override attendance");
     }
   };
 
@@ -530,40 +548,84 @@ const TeacherDashboard = () => {
                               colSpan="4"
                               className="px-6 py-6 bg-gray-50/50 border-t border-gray-100"
                             >
-                              {s.attendees.length === 0 ? (
+                              {allStudents.length === 0 ? (
                                 <div className="text-center py-4">
                                   <Users className="w-8 h-8 text-gray-300 mx-auto mb-2" />
                                   <p className="text-sm text-gray-500 font-medium">
-                                    No students attended this session.
+                                    No students enrolled in the system.
                                   </p>
                                 </div>
                               ) : (
                                 <div>
                                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                    {s.attendees.map((a, idx) => (
-                                      <div
-                                        key={idx}
-                                        className="flex items-center bg-white p-3 rounded-xl shadow-sm border border-gray-100"
-                                      >
-                                        <span className="h-10 w-10 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-lg mr-3">
-                                          {a.name.charAt(0).toUpperCase()}
-                                        </span>
-                                        <div className="flex-1 min-w-0">
-                                          <p className="text-sm font-bold text-gray-900 truncate">
-                                            {a.name}
-                                          </p>
-                                          <p className="text-xs font-medium text-gray-500 truncate">
-                                            {a.email}
-                                          </p>
+                                    {allStudents.map((student) => {
+                                      const record = s.attendees.find(
+                                        (a) => a.id === student.id,
+                                      );
+                                      const isPresent = !!record;
+
+                                      return (
+                                        <div
+                                          key={student.id}
+                                          className="flex items-center bg-white p-3 rounded-xl shadow-sm border border-gray-100"
+                                        >
+                                          <span
+                                            className={`h-10 w-10 rounded-full flex items-center justify-center font-bold text-lg mr-3 ${isPresent ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600"}`}
+                                          >
+                                            {student.name
+                                              .charAt(0)
+                                              .toUpperCase()}
+                                          </span>
+                                          <div className="flex-1 min-w-0">
+                                            <p className="text-sm font-bold text-gray-900 truncate">
+                                              {student.name}
+                                            </p>
+                                            <p className="text-xs font-medium text-gray-500 truncate">
+                                              {student.email}
+                                            </p>
+                                            {isPresent && record.scannedAt && (
+                                              <p className="text-[10px] text-gray-400 mt-0.5">
+                                                Scanned:{" "}
+                                                {formatTimeOnly(
+                                                  record.scannedAt,
+                                                )}
+                                              </p>
+                                            )}
+                                          </div>
+                                          <div className="text-right ml-2 group relative">
+                                            <button
+                                              onClick={() =>
+                                                handleOverride(
+                                                  s.id,
+                                                  student.id,
+                                                  isPresent
+                                                    ? "PRESENT"
+                                                    : "ABSENT",
+                                                )
+                                              }
+                                              className={`flex items-center px-3 py-1.5 rounded-lg border text-sm font-bold transition-colors ${
+                                                isPresent
+                                                  ? "bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100"
+                                                  : "bg-red-50 text-red-600 border-red-100 hover:bg-red-100"
+                                              }`}
+                                              title={`Click to mark as ${isPresent ? "Absent" : "Present"}`}
+                                            >
+                                              {isPresent ? (
+                                                <>
+                                                  <CheckCircle2 className="w-3.5 h-3.5 mr-1" />{" "}
+                                                  Present
+                                                </>
+                                              ) : (
+                                                <>
+                                                  <XCircle className="w-3.5 h-3.5 mr-1" />{" "}
+                                                  Absent
+                                                </>
+                                              )}
+                                            </button>
+                                          </div>
                                         </div>
-                                        <div className="text-right ml-2 group relative">
-                                          <p className="text-xs font-bold text-emerald-600 flex items-center">
-                                            <CheckCircle2 className="w-3.5 h-3.5 mr-1" />{" "}
-                                            {formatTimeOnly(a.scannedAt)}
-                                          </p>
-                                        </div>
-                                      </div>
-                                    ))}
+                                      );
+                                    })}
                                   </div>
                                 </div>
                               )}

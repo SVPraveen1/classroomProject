@@ -113,6 +113,12 @@ router.get("/history", verifyToken, isTeacher, async (req, res) => {
       where: { role: "STUDENT" },
     });
 
+    // Get all students for the override list
+    const allStudentsList = await prisma.user.findMany({
+      where: { role: "STUDENT" },
+      select: { id: true, name: true, email: true },
+    });
+
     // Group by subject
     const subjectsMap = {};
 
@@ -133,6 +139,7 @@ router.get("/history", verifyToken, isTeacher, async (req, res) => {
         attendedCount: session._count.attendances,
         isActive: session.isActive,
         attendees: session.attendances.map((a) => ({
+          id: a.student.id,
           name: a.student.name,
           email: a.student.email,
           scannedAt: a.scannedAt,
@@ -142,10 +149,64 @@ router.get("/history", verifyToken, isTeacher, async (req, res) => {
 
     const subjectData = Object.values(subjectsMap);
 
-    res.json({ subjects: subjectData });
+    res.json({ subjects: subjectData, allStudents: allStudentsList });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Failed to fetch session history" });
+  }
+});
+
+// Teacher manually overrides student attendance for a session
+router.post("/override", verifyToken, isTeacher, async (req, res) => {
+  try {
+    const { sessionId, studentId, status } = req.body; // status: "PRESENT" or "ABSENT"
+
+    if (!sessionId || !studentId || !status) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    // Verify session belongs to teacher
+    const session = await prisma.session.findUnique({
+      where: { id: sessionId },
+    });
+
+    if (!session || session.teacherId !== req.user.id) {
+      return res
+        .status(403)
+        .json({ error: "Unauthorized or session not found" });
+    }
+
+    if (status === "PRESENT") {
+      // Create attendance record if it doesn't already exist
+      await prisma.attendance.upsert({
+        where: {
+          sessionId_studentId: { sessionId, studentId },
+        },
+        update: {},
+        create: {
+          sessionId,
+          studentId,
+          distanceMeters: 0, // Manual override => 0 distance
+        },
+      });
+    } else if (status === "ABSENT") {
+      // Delete attendance record if it exists
+      try {
+        await prisma.attendance.delete({
+          where: {
+            sessionId_studentId: { sessionId, studentId },
+          },
+        });
+      } catch (e) {
+        // Record might not exist, ignore Error: P2025
+        if (e.code !== "P2025") throw e;
+      }
+    }
+
+    res.json({ message: "Attendance updated successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to update attendance" });
   }
 });
 
