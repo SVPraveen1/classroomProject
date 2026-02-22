@@ -1,0 +1,155 @@
+const { PrismaClient } = require("@prisma/client");
+const { calculateDistance } = require("../utils/geolocation");
+
+const prisma = new PrismaClient();
+
+class AttendanceService {
+  async markAttendance(studentId, { sessionId, latitude, longitude }) {
+    if (!sessionId || !latitude || !longitude) {
+      const error = new Error("Missing required session ID or location data");
+      error.status = 400;
+      throw error;
+    }
+
+    // Find the active session
+    const session = await prisma.session.findUnique({
+      where: { id: sessionId },
+    });
+
+    if (!session || !session.isActive) {
+      const error = new Error("Session not found or has already ended");
+      error.status = 404;
+      throw error;
+    }
+
+    // Check if attendance already marked
+    const existingAttendance = await prisma.attendance.findUnique({
+      where: {
+        sessionId_studentId: { sessionId, studentId: studentId },
+      },
+    });
+
+    if (existingAttendance) {
+      const error = new Error("Attendance already marked for this session");
+      error.status = 400;
+      throw error;
+    }
+
+    // Calculate distance using Haversine formula
+    const distanceMeters = calculateDistance(
+      session.latitude,
+      session.longitude,
+      latitude,
+      longitude,
+    );
+
+    // 200-meter radius to accommodate Wi-Fi geolocation inaccuracies on laptops/desktops
+    if (distanceMeters > 200) {
+      const error = new Error(
+        "You are too far from the classroom to mark attendance.",
+      );
+      error.status = 403;
+      error.distance = Math.round(distanceMeters);
+      throw error;
+    }
+
+    try {
+      // Insert attendance record
+      const attendance = await prisma.attendance.create({
+        data: {
+          sessionId,
+          studentId: studentId,
+          distanceMeters,
+        },
+      });
+
+      return {
+        message: "Attendance marked successfully",
+        distanceMeters,
+      };
+    } catch (dbError) {
+      if (dbError.code === "P2002") {
+        const error = new Error("Attendance already marked");
+        error.status = 400;
+        throw error;
+      }
+      throw dbError;
+    }
+  }
+
+  async getAttendanceHistory(studentId) {
+    // Get all sessions (created by any teacher)
+    const allSessions = await prisma.session.findMany({
+      orderBy: { createdAt: "desc" },
+      include: {
+        teacher: { select: { name: true } },
+      },
+    });
+
+    // Get sessions where this student was present
+    const myAttendances = await prisma.attendance.findMany({
+      where: { studentId: studentId },
+      select: { sessionId: true, scannedAt: true, distanceMeters: true },
+    });
+
+    // Build a set of attended session IDs for quick lookup
+    const attendedMap = {};
+    myAttendances.forEach((a) => {
+      attendedMap[a.sessionId] = {
+        scannedAt: a.scannedAt,
+        distance: a.distanceMeters,
+      };
+    });
+
+    const subjectsMap = {};
+
+    allSessions.forEach((session) => {
+      const sub = session.subject || "General";
+      if (!subjectsMap[sub]) {
+        subjectsMap[sub] = {
+          subject: sub,
+          teacherName: session.teacher.name,
+          totalClasses: 0,
+          attended: 0,
+          absent: 0,
+          sessions: [],
+        };
+      }
+
+      subjectsMap[sub].totalClasses++;
+
+      const isPresent = attendedMap[session.id] ? true : false;
+
+      if (isPresent) {
+        subjectsMap[sub].attended++;
+      }
+
+      subjectsMap[sub].sessions.push({
+        sessionId: session.id,
+        date: session.createdAt,
+        status: isPresent ? "PRESENT" : session.isActive ? "ONGOING" : "ABSENT",
+        teacherName: session.teacher.name,
+        scannedAt: attendedMap[session.id]?.scannedAt || null,
+        distance: attendedMap[session.id]?.distance || null,
+      });
+    });
+
+    const subjects = Object.values(subjectsMap).map((sub) => {
+      // "If no attendance record exists for a session, mark it as Absent."
+      sub.absent = sub.sessions.filter((s) => s.status === "ABSENT").length;
+
+      // Calculate percentage based on attended / (attended + absent) -- ignoring ONGOING for percentage
+      const completedClasses = sub.attended + sub.absent;
+      sub.percentage =
+        completedClasses > 0
+          ? Math.round((sub.attended / completedClasses) * 100)
+          : 0;
+
+      return sub;
+    });
+
+    return { subjects };
+  }
+}
+
+module.exports = new AttendanceService();

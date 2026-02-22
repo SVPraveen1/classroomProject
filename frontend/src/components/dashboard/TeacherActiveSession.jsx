@@ -1,0 +1,173 @@
+import React, { useState } from "react";
+import { QRCodeSVG } from "qrcode.react";
+import { MapPin, Users, CheckCircle2, BookOpen } from "lucide-react";
+
+export const TeacherActiveSession = ({
+  session,
+  attendees,
+  loading,
+  startSession,
+}) => {
+  const [subjectInput, setSubjectInput] = useState("");
+
+  if (!session) {
+    return (
+      <div className="text-center py-24 bg-white shadow-sm border border-gray-100 rounded-2xl max-w-2xl mx-auto">
+        <div className="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-6">
+          <BookOpen className="h-10 w-10 text-indigo-500" />
+        </div>
+        <h3 className="text-2xl font-extrabold text-gray-900 tracking-tight">
+          Start a New Session
+        </h3>
+        <p className="mt-2 text-md text-gray-500 mb-8 max-w-sm mx-auto">
+          Enter your subject name to generate a unique geolocation-locked QR
+          code for your students.
+        </p>
+        <div className="max-w-sm mx-auto space-y-4">
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <BookOpen className="h-5 w-5 text-gray-400" />
+            </div>
+            <input
+              type="text"
+              value={subjectInput}
+              onChange={(e) => setSubjectInput(e.target.value)}
+              placeholder="e.g. Data Structures, React 101"
+              className="block w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl shadow-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent sm:text-sm font-medium transition-shadow"
+            />
+          </div>
+          <button
+            onClick={() => {
+              startSession(subjectInput);
+              setSubjectInput("");
+            }}
+            disabled={loading || !subjectInput.trim()}
+            className="w-full flex justify-center items-center px-6 py-3 border border-transparent text-base font-bold rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md transition-all active:scale-95"
+          >
+            {loading ? (
+              <>
+                <svg
+                  className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                Starting Session...
+              </>
+            ) : (
+              "Generate Session QR"
+            )}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      {/* QR Code Panel */}
+      <div className="lg:col-span-5 bg-white shadow-sm border border-gray-100 rounded-2xl p-8 flex flex-col items-center justify-center relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 to-blue-500"></div>
+
+        <h3 className="text-xl font-extrabold text-gray-900 mb-2 flex items-center tracking-tight">
+          <MapPin className="mr-2 text-indigo-500 w-6 h-6" /> Live Session
+        </h3>
+        <div className="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-bold bg-indigo-50 text-indigo-700 mb-8">
+          {session.subject}
+        </div>
+
+        <div className="bg-white p-6 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.08)] mb-8 border border-gray-100 transform transition-transform hover:scale-105 duration-300">
+          <QRCodeSVG
+            value={session.id}
+            size={280}
+            level="H"
+            includeMargin={false}
+          />
+        </div>
+        <p className="text-sm font-medium text-gray-500 text-center px-4 max-w-xs">
+          Students must scan this code using their GeoAttend app while in the
+          classroom.
+        </p>
+      </div>
+
+      {/* Attendees Panel */}
+      <div className="lg:col-span-7 bg-white shadow-sm border border-gray-100 rounded-2xl overflow-hidden flex flex-col">
+        <div className="px-6 py-5 border-b border-gray-100 bg-white flex justify-between items-center">
+          <h3 className="text-lg font-bold text-gray-900 flex items-center">
+            <Users className="mr-2 text-indigo-500 w-5 h-5" /> Verified
+            Attendees
+          </h3>
+          <div className="flex items-center">
+            <span className="relative flex h-3 w-3 mr-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+            </span>
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700">
+              {attendees.length} Present
+            </span>
+          </div>
+        </div>
+        <div
+          className="flex-1 overflow-y-auto bg-gray-50/30"
+          style={{ maxHeight: "600px" }}
+        >
+          <ul className="divide-y divide-gray-100">
+            {attendees.length === 0 ? (
+              <li className="px-6 py-16 text-center">
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Users className="w-8 h-8 text-gray-400" />
+                </div>
+                <p className="text-gray-500 font-medium">
+                  Waiting for students to start scanning...
+                </p>
+              </li>
+            ) : (
+              attendees.map((record) => (
+                <li
+                  key={record.id}
+                  className="px-6 py-4 hover:bg-white transition-colors group"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <span className="h-12 w-12 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xl shadow-inner border border-indigo-100">
+                        {record.student.name.charAt(0).toUpperCase()}
+                      </span>
+                      <div className="ml-4">
+                        <p className="text-sm font-bold text-gray-900">
+                          {record.student.name}
+                        </p>
+                        <p className="text-xs font-medium text-gray-500">
+                          {record.student.email}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="flex items-center text-emerald-600 text-sm font-bold bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100">
+                        <CheckCircle2 className="w-4 h-4 mr-1.5" />
+                        Verified
+                      </div>
+                    </div>
+                  </div>
+                </li>
+              ))
+            )}
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+};
