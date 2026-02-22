@@ -13,7 +13,7 @@ export const useStudentDashboard = () => {
 
   const fetchHistory = async () => {
     try {
-      const res = await attendanceService.getStudentHistory();
+      const res = await attendanceService.getAttendanceHistory();
       setSubjects(res.subjects || []);
     } catch (err) {
       console.error("Failed to fetch history", err);

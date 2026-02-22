@@ -26,6 +26,15 @@ app.get("/api/health", (req, res) => {
     .json({ status: "ok", message: "Classroom Attendance API is running" });
 });
 
+const path = require("path");
+
+// Serve frontend static files
+app.use(express.static(path.join(__dirname, "../frontend/dist")));
+
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/dist/index.html"));
+});
+
 app.use(require("./middleware/errorHandler"));
 
 const PORT = process.env.PORT || 5000;
