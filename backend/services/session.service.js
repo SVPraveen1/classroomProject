@@ -169,6 +169,71 @@ class SessionService {
 
     return { message: "Attendance updated successfully" };
   }
+
+  async exportToCSV(teacherId, subjectName) {
+    // 1. Fetch all sessions for this teacher and subject
+    const subjectCode = subjectName === "General" ? null : subjectName;
+
+    // Prisma query trick: if subjectCode is null, we can query on null, but the schema allows String?
+    // Let's rely on exactly what's passed in. Our app usually passes "General" or "some text".
+    // Wait, the DB stores "General" instead of null when default is used.
+    const sessions = await prisma.session.findMany({
+      where: {
+        teacherId: teacherId,
+        subject: subjectName,
+      },
+      orderBy: { createdAt: "asc" }, // Ascending so sessions go chronologically left to right
+      include: {
+        attendances: {
+          select: { studentId: true },
+        },
+      },
+    });
+
+    if (sessions.length === 0) {
+      const error = new Error("No sessions found for this subject.");
+      error.status = 404;
+      throw error;
+    }
+
+    // 2. Fetch all students
+    const allStudents = await prisma.user.findMany({
+      where: { role: "STUDENT" },
+      select: { id: true, name: true, email: true },
+      orderBy: { name: "asc" },
+    });
+
+    // 3. Build CSV Header
+    // "Student Name", "Email", "2023-10-01", "2023-10-05" ...
+    const formatDateObj = (date) => {
+      const d = new Date(date);
+      // Create a short date-time string, e.g., "10/05/2023 14:30"
+      return `${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+    };
+
+    let csvContent = `"Student Name","Email",`;
+    const sessionHeaders = sessions.map(
+      (s) => `"${formatDateObj(s.createdAt)}"`,
+    );
+    csvContent += sessionHeaders.join(",") + "\n";
+
+    // 4. Build CSV Rows for each student
+    for (const student of allStudents) {
+      const row = [`"${student.name}"`, `"${student.email}"`];
+
+      // Check each session if student attended
+      for (const session of sessions) {
+        const isPresent = session.attendances.some(
+          (a) => a.studentId === student.id,
+        );
+        row.push(isPresent ? `"Present"` : `"Absent"`);
+      }
+
+      csvContent += row.join(",") + "\n";
+    }
+
+    return csvContent;
+  }
 }
 
 module.exports = new SessionService();

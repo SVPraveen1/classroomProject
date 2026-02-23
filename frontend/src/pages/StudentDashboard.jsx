@@ -3,6 +3,7 @@ import { Camera, CalendarDays } from "lucide-react";
 import { useStudentDashboard } from "../hooks/useStudentDashboard";
 import { StudentScanner } from "../components/dashboard/StudentScanner";
 import { StudentHistory } from "../components/dashboard/StudentHistory";
+import { DashboardLayout } from "../components/layout/DashboardLayout";
 
 const StudentDashboard = () => {
   const [activeTab, setActiveTab] = useState("scan"); // 'scan' or 'history'
@@ -20,68 +21,73 @@ const StudentDashboard = () => {
     fetchHistory,
   } = useStudentDashboard();
 
+  const navigation = [
+    {
+      id: "scan",
+      name: "Mark Attendance",
+      icon: Camera,
+      active: activeTab === "scan",
+      onClick: () => {
+        setActiveTab("scan");
+        setSelectedSubject(null);
+      },
+    },
+    {
+      id: "history",
+      name: "Subject Records",
+      icon: CalendarDays,
+      active: activeTab === "history",
+      onClick: () => {
+        setActiveTab("history");
+        setSelectedSubject(null);
+        fetchHistory();
+      },
+    },
+  ];
+
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 h-full">
-      <div className="mb-8">
+    <DashboardLayout navigation={navigation}>
+      <div className="mb-8 pl-1">
         <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
-          Student Portal
+          {activeTab === "scan" ? "Class Scanner" : "Attendance Records"}
         </h2>
         <p className="mt-2 text-sm text-gray-500">
-          Mark your attendance by scanning the teacher's QR code.
+          {activeTab === "scan"
+            ? "Scan your teacher's active session QR code to mark yourself present."
+            : "Review your past attendance history for all enrolled subjects."}
         </p>
-      </div>
-
-      {/* Tabs */}
-      <div className="border-b border-gray-200 mb-6">
-        <nav className="-mb-px flex space-x-8">
-          <button
-            onClick={() => {
-              setActiveTab("scan");
-              setSelectedSubject(null);
-            }}
-            className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === "scan" ? "border-indigo-500 text-indigo-600" : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"}`}
-          >
-            <Camera className="inline w-4 h-4 mr-1 -mt-0.5" /> Mark Attendance
-          </button>
-          <button
-            onClick={() => {
-              setActiveTab("history");
-              setSelectedSubject(null);
-              fetchHistory();
-            }}
-            className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === "history" ? "border-indigo-500 text-indigo-600" : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"}`}
-          >
-            <CalendarDays className="inline w-4 h-4 mr-1 -mt-0.5" /> Subject
-            Records
-          </button>
-        </nav>
       </div>
 
       {/* ───────── SCAN TAB ───────── */}
       {activeTab === "scan" && (
-        <StudentScanner
-          status={status}
-          setStatus={setStatus}
-          scanResult={scanResult}
-          errorMessage={errorMessage}
-          distance={distance}
-          resetState={resetState}
-          onSuccessViewRecords={() => {
-            resetState();
-            setActiveTab("history");
-          }}
-        />
+        <div className="animation-fade-in">
+          <StudentScanner
+            status={status}
+            setStatus={setStatus}
+            scanResult={scanResult}
+            errorMessage={errorMessage}
+            distance={distance}
+            resetState={resetState}
+            onSuccessViewRecords={() => {
+              resetState();
+              setActiveTab("history");
+              fetchHistory();
+            }}
+          />
+        </div>
       )}
 
       {/* ───────── SUBJECT RECORDS / HISTORY TAB ───────── */}
       {activeTab === "history" && (
-        <StudentHistory
-          subjects={subjects}
-          selectedSubject={selectedSubject}
-          setSelectedSubject={setSelectedSubject}
-        />
+        <div className="animation-fade-in">
+          <StudentHistory
+            subjects={subjects}
+            selectedSubject={selectedSubject}
+            setSelectedSubject={setSelectedSubject}
+          />
+        </div>
       )}
-    </div>
+    </DashboardLayout>
   );
 };
 

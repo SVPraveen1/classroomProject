@@ -42,4 +42,12 @@ router.post(
   sessionController.overrideAttendance,
 );
 
+// Export attendance for a specific subject to CSV
+router.get(
+  "/export/:subjectName",
+  verifyToken,
+  isTeacher,
+  sessionController.exportSubjectCSV,
+);
+
 module.exports = router;

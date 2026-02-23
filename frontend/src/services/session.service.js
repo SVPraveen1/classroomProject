@@ -38,4 +38,15 @@ export const sessionService = {
     });
     return response.data;
   },
+
+  exportCsv: async (subjectName) => {
+    // We need to request blob response type so that the browser can handle the raw file data
+    const response = await api.get(
+      `/session/export/${encodeURIComponent(subjectName)}`,
+      {
+        responseType: "blob",
+      },
+    );
+    return response.data;
+  },
 };

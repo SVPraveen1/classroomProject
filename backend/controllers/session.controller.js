@@ -61,3 +61,23 @@ exports.overrideAttendance = async (req, res, next) => {
     next(error);
   }
 };
+
+exports.exportSubjectCSV = async (req, res, next) => {
+  try {
+    const subjectName = req.params.subjectName;
+    const csvContent = await sessionService.exportToCSV(
+      req.user.id,
+      subjectName,
+    );
+
+    res.setHeader("Content-Type", "text/csv");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="attendance_${subjectName.replace(/\s+/g, "_")}.csv"`,
+    );
+
+    res.send(csvContent);
+  } catch (error) {
+    next(error);
+  }
+};

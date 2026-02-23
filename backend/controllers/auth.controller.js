@@ -17,3 +17,12 @@ exports.login = async (req, res, next) => {
     next(error);
   }
 };
+
+exports.bulkRegister = async (req, res, next) => {
+  try {
+    const result = await authService.bulkRegisterUser(req.body);
+    res.status(201).json(result);
+  } catch (error) {
+    next(error);
+  }
+};

@@ -15,4 +15,9 @@ export const authService = {
     });
     return response.data;
   },
+
+  bulkRegister: async (csvDataList) => {
+    const response = await api.post("/auth/bulk-register", csvDataList);
+    return response.data;
+  },
 };
