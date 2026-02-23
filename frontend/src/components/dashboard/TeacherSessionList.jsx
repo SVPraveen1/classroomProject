@@ -36,47 +36,47 @@ export const TeacherSessionList = ({
 
   if (!selectedSubject) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {subjects.map((sub) => (
           <div
             key={sub.subject}
             onClick={() => setSelectedSubject(sub)}
-            className="group bg-white flex flex-col justify-between shadow-sm border border-gray-100 rounded-2xl p-6 cursor-pointer hover:-translate-y-1 hover:shadow-xl transition-all duration-300 relative overflow-hidden"
+            className="group bg-white flex flex-col justify-between shadow-sm border border-slate-200 rounded-xl p-5 cursor-pointer hover:border-indigo-300 hover:shadow-md transition-all duration-200 relative overflow-hidden"
           >
-            {/* Decorative top border */}
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 to-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            {/* Subtle top border on hover */}
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 to-violet-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
 
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-gray-900 tracking-tight leading-tight flex items-center">
-                <BookOpen className="w-5 h-5 mr-2 text-indigo-500" />
+            <div className="flex items-center justify-between mb-4 mt-1">
+              <h3 className="text-lg font-bold text-slate-800 tracking-tight flex items-center">
+                <BookOpen className="w-4 h-4 mr-2 text-indigo-500" />
                 {sub.subject}
               </h3>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 bg-gray-50/50 rounded-xl p-4 border border-gray-100/50">
-              <div>
-                <p className="text-xs uppercase tracking-wider text-gray-500 font-semibold mb-1">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex-1 bg-slate-50 rounded-lg p-3 border border-slate-100 flex flex-col justify-center items-center">
+                <p className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold mb-0.5">
                   Sessions
                 </p>
-                <p className="text-lg font-bold text-gray-900">
+                <p className="text-lg font-extrabold text-slate-800 leading-tight">
                   {sub.totalSessions}
                 </p>
               </div>
-              <div>
-                <p className="text-xs uppercase tracking-wider text-gray-500 font-semibold mb-1">
+              <div className="flex-1 bg-slate-50 rounded-lg p-3 border border-slate-100 flex flex-col justify-center items-center">
+                <p className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold mb-0.5">
                   Students
                 </p>
-                <p className="text-lg font-bold text-gray-900">
+                <p className="text-lg font-extrabold text-slate-800 leading-tight">
                   {sub.totalStudents}
                 </p>
               </div>
             </div>
 
-            <div className="mt-5 flex items-center justify-end text-sm">
-              <span className="text-indigo-600 font-semibold group-hover:translate-x-1 transition-transform flex items-center">
-                View Sessions{" "}
+            <div className="flex items-center justify-end text-sm mt-auto">
+              <span className="text-indigo-600 font-medium group-hover:translate-x-0.5 transition-transform flex items-center text-xs">
+                View Details{" "}
                 <svg
-                  className="w-4 h-4 ml-1"
+                  className="w-3.5 h-3.5 ml-1"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -84,7 +84,7 @@ export const TeacherSessionList = ({
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    strokeWidth={2}
+                    strokeWidth={2.5}
                     d="M9 5l7 7-7 7"
                   />
                 </svg>

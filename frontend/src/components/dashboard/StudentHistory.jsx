@@ -56,10 +56,10 @@ export const StudentHistory = ({
 
   if (!selectedSubject) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {subjects.map((sub) => {
           const percentage = parseFloat(sub.percentage) || 0;
-          const circumference = 2 * Math.PI * 36;
+          const circumference = 2 * Math.PI * 30;
           const strokeDashoffset =
             circumference - (percentage / 100) * circumference;
 
@@ -71,70 +71,74 @@ export const StudentHistory = ({
             <div
               key={sub.subject}
               onClick={() => setSelectedSubject(sub)}
-              className="group bg-white flex flex-col justify-between shadow-sm border border-gray-100 rounded-2xl p-6 cursor-pointer hover:-translate-y-1 hover:shadow-xl transition-all duration-300 relative overflow-hidden"
+              className="group bg-white flex flex-col justify-between shadow-sm border border-slate-200 rounded-xl p-5 cursor-pointer hover:border-indigo-300 hover:shadow-md transition-all duration-200 relative overflow-hidden"
             >
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 to-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-              <div className="flex items-start justify-between mb-4">
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 to-violet-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+
+              <div className="flex items-start justify-between mb-2">
                 <div>
-                  <h3 className="text-xl font-bold text-gray-900 tracking-tight leading-tight flex items-center mb-1">
-                    <BookOpen className="w-5 h-5 mr-2 text-indigo-500" />
+                  <h3 className="text-lg font-bold text-slate-800 tracking-tight flex items-center mb-0.5">
+                    <BookOpen className="w-4 h-4 mr-2 text-indigo-500" />
                     {sub.subject}
                   </h3>
-                  <p className="text-sm text-gray-500 font-medium ml-7">
+                  <p className="text-xs text-slate-500 font-medium ml-6">
                     {sub.totalClasses} Total Classes
                   </p>
                 </div>
 
-                {/* Circular Progress */}
-                <div className="relative w-20 h-20 flex items-center justify-center shrink-0">
+                {/* Circular Progress (Scaled down) */}
+                <div className="relative w-14 h-14 flex items-center justify-center shrink-0">
                   <svg className="w-full h-full transform -rotate-90">
                     <circle
-                      cx="40"
-                      cy="40"
-                      r="36"
+                      cx="28"
+                      cy="28"
+                      r="26"
                       stroke="currentColor"
-                      strokeWidth="6"
+                      strokeWidth="4"
                       fill="transparent"
-                      className="text-gray-100"
+                      className="text-slate-100"
                     />
                     <circle
-                      cx="40"
-                      cy="40"
-                      r="36"
+                      cx="28"
+                      cy="28"
+                      r="26"
                       stroke="currentColor"
-                      strokeWidth="6"
+                      strokeWidth="4"
                       fill="transparent"
                       strokeDasharray={circumference}
                       strokeDashoffset={strokeDashoffset}
                       className={`${ringColor} transition-all duration-1000 ease-out`}
                     />
                   </svg>
-                  <span className="absolute text-sm font-bold text-gray-800">
+                  <span className="absolute text-[11px] font-bold text-slate-800">
                     {Math.round(percentage)}%
                   </span>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 bg-gray-50/50 rounded-xl p-4 border border-gray-100/50 mt-4">
-                <div>
-                  <p className="text-xs uppercase tracking-wider text-gray-500 font-semibold mb-1">
+              <div className="flex items-center gap-3 mb-4 mt-2">
+                <div className="flex-1 bg-slate-50 rounded-lg p-3 border border-slate-100 flex flex-col justify-center items-center">
+                  <p className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold mb-0.5">
                     Attended
                   </p>
-                  <p className="text-lg font-bold text-emerald-600">
+                  <p className="text-lg font-extrabold text-emerald-600 leading-tight">
                     {sub.attended}
                   </p>
                 </div>
-                <div>
-                  <p className="text-xs uppercase tracking-wider text-gray-500 font-semibold mb-1">
+                <div className="flex-1 bg-slate-50 rounded-lg p-3 border border-slate-100 flex flex-col justify-center items-center">
+                  <p className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold mb-0.5">
                     Absent
                   </p>
-                  <p className="text-lg font-bold text-red-600">{sub.absent}</p>
+                  <p className="text-lg font-extrabold text-red-600 leading-tight">
+                    {sub.absent}
+                  </p>
                 </div>
               </div>
 
-              <div className="mt-5 flex items-center justify-end text-sm">
-                <span className="text-indigo-600 font-semibold group-hover:translate-x-1 transition-transform flex items-center">
-                  View Details <ArrowLeft className="w-4 h-4 ml-1 rotate-180" />
+              <div className="flex items-center justify-end text-sm mt-auto">
+                <span className="text-indigo-600 font-medium group-hover:translate-x-0.5 transition-transform flex items-center text-xs">
+                  View Details{" "}
+                  <ArrowLeft className="w-3.5 h-3.5 ml-1 rotate-180" />
                 </span>
               </div>
             </div>

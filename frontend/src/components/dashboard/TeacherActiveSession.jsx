@@ -78,60 +78,60 @@ export const TeacherActiveSession = ({
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
       {/* QR Code Panel */}
-      <div className="lg:col-span-5 bg-white shadow-sm border border-gray-100 rounded-2xl p-8 flex flex-col items-center justify-center relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 to-blue-500"></div>
+      <div className="lg:col-span-5 bg-white shadow-sm border border-slate-200 rounded-xl p-6 flex flex-col items-center justify-center relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 to-violet-500"></div>
 
-        <h3 className="text-xl font-extrabold text-gray-900 mb-2 flex items-center tracking-tight">
-          <MapPin className="mr-2 text-indigo-500 w-6 h-6" /> Live Session
+        <h3 className="text-xl font-extrabold text-slate-800 mb-2 flex items-center tracking-tight">
+          <MapPin className="mr-2 text-indigo-500 w-5 h-5" /> Live Session
         </h3>
-        <div className="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-bold bg-indigo-50 text-indigo-700 mb-8">
+        <div className="inline-flex items-center px-4 py-1.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 mb-6">
           {session.subject}
         </div>
 
-        <div className="bg-white p-6 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.08)] mb-8 border border-gray-100 transform transition-transform hover:scale-105 duration-300">
+        <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 transform transition-transform hover:scale-105 duration-300 mb-6">
           <QRCodeSVG
             value={session.id}
-            size={280}
+            size={240}
             level="H"
             includeMargin={false}
           />
         </div>
-        <p className="text-sm font-medium text-gray-500 text-center px-4 max-w-xs">
+        <p className="text-sm font-medium text-slate-500 text-center px-4 max-w-xs">
           Students must scan this code using their GeoAttend app while in the
           classroom.
         </p>
       </div>
 
       {/* Attendees Panel */}
-      <div className="lg:col-span-7 bg-white shadow-sm border border-gray-100 rounded-2xl overflow-hidden flex flex-col">
-        <div className="px-6 py-5 border-b border-gray-100 bg-white flex justify-between items-center">
-          <h3 className="text-lg font-bold text-gray-900 flex items-center">
-            <Users className="mr-2 text-indigo-500 w-5 h-5" /> Verified
+      <div className="lg:col-span-7 bg-white shadow-sm border border-slate-200 rounded-xl overflow-hidden flex flex-col">
+        <div className="px-5 py-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+          <h3 className="text-sm font-bold text-slate-800 flex items-center">
+            <Users className="mr-2 text-indigo-500 w-4 h-4" /> Verified
             Attendees
           </h3>
           <div className="flex items-center">
-            <span className="relative flex h-3 w-3 mr-2">
+            <span className="relative flex h-2 w-2 mr-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
             </span>
-            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700">
+            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold bg-emerald-50 text-emerald-700">
               {attendees.length} Present
             </span>
           </div>
         </div>
         <div
-          className="flex-1 overflow-y-auto bg-gray-50/30"
-          style={{ maxHeight: "600px" }}
+          className="flex-1 overflow-y-auto bg-white"
+          style={{ maxHeight: "400px" }}
         >
-          <ul className="divide-y divide-gray-100">
+          <ul className="divide-y divide-slate-100">
             {attendees.length === 0 ? (
-              <li className="px-6 py-16 text-center">
-                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Users className="w-8 h-8 text-gray-400" />
+              <li className="px-6 py-12 text-center">
+                <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <Users className="w-6 h-6 text-slate-400" />
                 </div>
-                <p className="text-gray-500 font-medium">
+                <p className="text-slate-500 text-sm font-medium">
                   Waiting for students to start scanning...
                 </p>
               </li>
