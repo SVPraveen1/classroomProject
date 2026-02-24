@@ -290,11 +290,13 @@ export const TeacherSessionList = ({
                                   <span
                                     className={`h-10 w-10 rounded-full flex items-center justify-center font-bold text-lg mr-3 ${isPresent ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600"}`}
                                   >
-                                    {student.name.charAt(0).toUpperCase()}
+                                    {(student.rollNo || student.name)
+                                      .charAt(0)
+                                      .toUpperCase()}
                                   </span>
                                   <div className="flex-1 min-w-0">
                                     <p className="text-sm font-bold text-gray-900 truncate">
-                                      {student.name}
+                                      {student.rollNo || student.name}
                                     </p>
                                     <p className="text-xs font-medium text-gray-500 truncate">
                                       {student.email}

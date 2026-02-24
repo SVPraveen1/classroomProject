@@ -144,11 +144,13 @@ export const TeacherActiveSession = ({
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
                       <span className="h-12 w-12 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xl shadow-inner border border-indigo-100">
-                        {record.student.name.charAt(0).toUpperCase()}
+                        {(record.student.rollNo || record.student.name)
+                          .charAt(0)
+                          .toUpperCase()}
                       </span>
                       <div className="ml-4">
                         <p className="text-sm font-bold text-gray-900">
-                          {record.student.name}
+                          {record.student.rollNo || record.student.name}
                         </p>
                         <p className="text-xs font-medium text-gray-500">
                           {record.student.email}

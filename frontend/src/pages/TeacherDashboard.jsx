@@ -1,13 +1,14 @@
 import React, { useState } from "react";
-import { MapPin, Clock, Upload } from "lucide-react";
+import { MapPin, Clock, Upload, Users } from "lucide-react";
 import { useTeacherDashboard } from "../hooks/useTeacherDashboard";
 import { TeacherActiveSession } from "../components/dashboard/TeacherActiveSession";
 import { TeacherSessionList } from "../components/dashboard/TeacherSessionList";
 import { DashboardLayout } from "../components/layout/DashboardLayout";
 import { BulkUpload } from "../components/dashboard/BulkUpload";
+import { StudentAttendanceReport } from "../components/dashboard/StudentAttendanceReport";
 
 const TeacherDashboard = () => {
-  const [activeTab, setActiveTab] = useState("session"); // 'session', 'history', or 'bulk'
+  const [activeTab, setActiveTab] = useState("session"); // 'session', 'history', 'students', or 'bulk'
 
   const {
     session,
@@ -57,6 +58,16 @@ const TeacherDashboard = () => {
         setSelectedSubject(null);
       },
     },
+    {
+      id: "students",
+      name: "Students",
+      icon: Users,
+      active: activeTab === "students",
+      onClick: () => {
+        setActiveTab("students");
+        setSelectedSubject(null);
+      },
+    },
   ];
 
   return (
@@ -67,6 +78,7 @@ const TeacherDashboard = () => {
             {activeTab === "session" && "Active Session"}
             {activeTab === "history" && "Subject Analytics"}
             {activeTab === "bulk" && "Bulk Registration"}
+            {activeTab === "students" && "Student Attendance Report"}
           </h2>
           <p className="mt-2 text-sm text-gray-500">
             {activeTab === "session" &&
@@ -75,6 +87,8 @@ const TeacherDashboard = () => {
               "Review past sessions, student attendance, and export data."}
             {activeTab === "bulk" &&
               "Upload CSV files to securely add bulk students or teachers."}
+            {activeTab === "students" &&
+              "View all students with attendance stats. Filter by branch or session."}
           </p>
         </div>
         <div className="mt-4 flex md:mt-0 md:ml-4">
@@ -129,6 +143,13 @@ const TeacherDashboard = () => {
       {activeTab === "bulk" && (
         <div className="animation-fade-in">
           <BulkUpload />
+        </div>
+      )}
+
+      {/* ─── STUDENT ATTENDANCE REPORT TAB ─── */}
+      {activeTab === "students" && (
+        <div className="animation-fade-in">
+          <StudentAttendanceReport />
         </div>
       )}
     </DashboardLayout>

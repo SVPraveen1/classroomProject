@@ -8,7 +8,7 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is logged in on mount
+    // Restore session from localStorage on mount
     const storedUser = localStorage.getItem("user");
     const token = localStorage.getItem("token");
 
@@ -35,10 +35,14 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const register = async (name, email, password, role) => {
+  /**
+   * Register a new user with role-specific data.
+   * @param {Object} userData - Full registration payload including role
+   */
+  const register = async (userData) => {
     try {
-      await api.post("/auth/register", { name, email, password, role });
-      return await login(email, password); // Auto-login after register
+      await api.post("/auth/register", userData);
+      return await login(userData.email, userData.password);
     } catch (error) {
       return {
         success: false,

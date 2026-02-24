@@ -54,7 +54,9 @@ class SessionService {
   async getSessionAttendees(sessionId) {
     const attendees = await prisma.attendance.findMany({
       where: { sessionId },
-      include: { student: { select: { name: true, email: true } } },
+      include: {
+        student: { select: { name: true, email: true, rollNo: true } },
+      },
     });
     return { attendees };
   }
@@ -67,7 +69,9 @@ class SessionService {
         _count: { select: { attendances: true } },
         attendances: {
           include: {
-            student: { select: { id: true, name: true, email: true } },
+            student: {
+              select: { id: true, name: true, email: true, rollNo: true },
+            },
           },
         },
       },
@@ -81,7 +85,7 @@ class SessionService {
     // Get all students for the override list
     const allStudentsList = await prisma.user.findMany({
       where: { role: "STUDENT" },
-      select: { id: true, name: true, email: true },
+      select: { id: true, name: true, email: true, rollNo: true },
     });
 
     // Group by subject
@@ -107,6 +111,7 @@ class SessionService {
           id: a.student.id,
           name: a.student.name,
           email: a.student.email,
+          rollNo: a.student.rollNo,
           scannedAt: a.scannedAt,
         })),
       });
@@ -199,7 +204,7 @@ class SessionService {
     // 2. Fetch all students
     const allStudents = await prisma.user.findMany({
       where: { role: "STUDENT" },
-      select: { id: true, name: true, email: true },
+      select: { id: true, name: true, email: true, rollNo: true },
       orderBy: { name: "asc" },
     });
 
@@ -233,6 +238,104 @@ class SessionService {
     }
 
     return csvContent;
+  }
+
+  /**
+   * Get a student attendance report for the teacher's sessions.
+   * Supports optional filters: branchName, subject (groups all sessions of that subject).
+   * Returns students with attendance stats + dynamic filter options.
+   */
+  async getStudentReport(teacherId, { branchName, subject } = {}) {
+    // 1. Build session query — filter by subject name if provided
+    const sessionWhere = { teacherId };
+    if (subject) sessionWhere.subject = subject;
+
+    const sessions = await prisma.session.findMany({
+      where: sessionWhere,
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        subject: true,
+        attendances: {
+          select: { studentId: true },
+        },
+      },
+    });
+
+    // 2. Build student query
+    const studentWhere = { role: "STUDENT" };
+    if (branchName) studentWhere.branchName = branchName;
+
+    const students = await prisma.user.findMany({
+      where: studentWhere,
+      select: {
+        id: true,
+        rollNo: true,
+        name: true,
+        email: true,
+        branchName: true,
+      },
+      orderBy: { rollNo: "asc" },
+    });
+
+    // 3. Compute attendance for each student across filtered sessions
+    const totalSessions = sessions.length;
+
+    const studentReport = students.map((student) => {
+      let presentCount = 0;
+      sessions.forEach((session) => {
+        if (session.attendances.some((a) => a.studentId === student.id)) {
+          presentCount++;
+        }
+      });
+
+      return {
+        id: student.id,
+        rollNo: student.rollNo,
+        totalSessions,
+        presentCount,
+        absentCount: totalSessions - presentCount,
+        percentage:
+          totalSessions > 0
+            ? Math.round((presentCount / totalSessions) * 100)
+            : 0,
+      };
+    });
+
+    // 4. Fetch dynamic filter options
+    const allBranches = await prisma.user.findMany({
+      where: { role: "STUDENT", branchName: { not: null } },
+      select: { branchName: true },
+      distinct: ["branchName"],
+      orderBy: { branchName: "asc" },
+    });
+
+    // Group sessions by subject with count
+    const allTeacherSessions = await prisma.session.findMany({
+      where: { teacherId },
+      select: { subject: true },
+    });
+
+    const subjectCounts = {};
+    allTeacherSessions.forEach((s) => {
+      subjectCounts[s.subject] = (subjectCounts[s.subject] || 0) + 1;
+    });
+
+    const subjects = Object.entries(subjectCounts).map(([name, count]) => ({
+      name,
+      sessionCount: count,
+      label: `${name} — ${count} ${count === 1 ? "class" : "classes"}`,
+    }));
+
+    return {
+      students: studentReport,
+      totalSessions,
+      totalStudents: students.length,
+      filters: {
+        branches: allBranches.map((b) => b.branchName),
+        subjects,
+      },
+    };
   }
 }
 

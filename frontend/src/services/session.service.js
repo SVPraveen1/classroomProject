@@ -49,4 +49,14 @@ export const sessionService = {
     );
     return response.data;
   },
+
+  getStudentReport: async ({ branchName, subject } = {}) => {
+    const params = new URLSearchParams();
+    if (branchName) params.append("branchName", branchName);
+    if (subject) params.append("subject", subject);
+    const response = await api.get(
+      `/session/student-report?${params.toString()}`,
+    );
+    return response.data;
+  },
 };

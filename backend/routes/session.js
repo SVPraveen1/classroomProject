@@ -50,4 +50,12 @@ router.get(
   sessionController.exportSubjectCSV,
 );
 
+// Get student attendance report with optional filters (branch, session)
+router.get(
+  "/student-report",
+  verifyToken,
+  isTeacher,
+  sessionController.getStudentReport,
+);
+
 module.exports = router;

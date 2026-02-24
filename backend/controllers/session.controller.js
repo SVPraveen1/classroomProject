@@ -81,3 +81,16 @@ exports.exportSubjectCSV = async (req, res, next) => {
     next(error);
   }
 };
+
+exports.getStudentReport = async (req, res, next) => {
+  try {
+    const { branchName, subject } = req.query;
+    const result = await sessionService.getStudentReport(req.user.id, {
+      branchName: branchName || undefined,
+      subject: subject || undefined,
+    });
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+};

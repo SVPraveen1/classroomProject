@@ -19,6 +19,22 @@ export const BulkUpload = () => {
     }
   };
 
+  // Maps CSV column headers (case-insensitive) to the exact field names the API expects
+  const HEADER_MAP = {
+    name: "name",
+    email: "email",
+    password: "password",
+    role: "role",
+    rollno: "rollNo",
+    branchname: "branchName",
+    guardianemail: "guardianEmail",
+    guardianphone: "guardianPhone",
+    department: "department",
+  };
+
+  const mapHeaders = (rawHeaders) =>
+    rawHeaders.map((h) => HEADER_MAP[h.trim().toLowerCase()] || h.trim());
+
   const parseCSV = (file) => {
     const reader = new FileReader();
     reader.onload = (event) => {
@@ -29,7 +45,7 @@ export const BulkUpload = () => {
           throw new Error("CSV file is empty or missing headers.");
         }
 
-        const headers = lines[0].split(",").map((h) => h.trim().toLowerCase());
+        const headers = mapHeaders(lines[0].split(","));
         const requiredHeaders = ["name", "email", "password", "role"];
 
         const missing = requiredHeaders.filter((h) => !headers.includes(h));
@@ -71,7 +87,7 @@ export const BulkUpload = () => {
       try {
         const text = event.target.result;
         const lines = text.split(/\r?\n/);
-        const headers = lines[0].split(",").map((h) => h.trim().toLowerCase());
+        const headers = mapHeaders(lines[0].split(","));
 
         const fullData = [];
         for (let i = 1; i < lines.length; i++) {
@@ -109,10 +125,15 @@ export const BulkUpload = () => {
         </h3>
         <p className="text-sm text-slate-500 mt-1">
           Upload a CSV file to add multiple students and teachers at once. The
-          CSV must include the exact columns:{" "}
+          CSV must include:{" "}
           <strong className="text-slate-700">
             name, email, password, role
           </strong>
+          . For students, also include:{" "}
+          <strong className="text-slate-700">
+            rollNo, branchName, guardianEmail, guardianPhone
+          </strong>
+          . For teachers: <strong className="text-slate-700">department</strong>
         </p>
       </div>
 
