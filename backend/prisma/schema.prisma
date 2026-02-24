@@ -37,13 +37,14 @@ model Session {
 }
 
 model Attendance {
-  id             Int      @id @default(autoincrement())
-  sessionId      String
-  session        Session  @relation(fields: [sessionId], references: [id])
-  studentId      Int
-  student        User     @relation(fields: [studentId], references: [id])
-  scannedAt      DateTime @default(now())
-  distanceMeters Float
+  id                Int      @id @default(autoincrement())
+  sessionId         String
+  session           Session  @relation(fields: [sessionId], references: [id])
+  studentId         Int
+  student           User     @relation(fields: [studentId], references: [id])
+  scannedAt         DateTime @default(now())
+  distanceMeters    Float
+  deviceFingerprint String?
 
   @@unique([sessionId, studentId]) // A student can only mark attendance once per session
 }

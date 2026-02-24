@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Html5QrcodeScanner } from "html5-qrcode";
 import { attendanceService } from "../services/attendance.service";
+import { getDeviceFingerprint } from "../utils/deviceFingerprint";
 
 export const useStudentDashboard = () => {
   const [scanResult, setScanResult] = useState(null);
@@ -64,6 +65,9 @@ export const useStudentDashboard = () => {
       return;
     }
 
+    // Generate device fingerprint before sending
+    const fingerprint = getDeviceFingerprint();
+
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         try {
@@ -72,6 +76,7 @@ export const useStudentDashboard = () => {
             sessionId,
             latitude,
             longitude,
+            fingerprint,
           );
           setDistance(res.distanceMeters);
           setStatus("success");

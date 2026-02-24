@@ -4,7 +4,10 @@ const { calculateDistance } = require("../utils/geolocation");
 const prisma = new PrismaClient();
 
 class AttendanceService {
-  async markAttendance(studentId, { sessionId, latitude, longitude }) {
+  async markAttendance(
+    studentId,
+    { sessionId, latitude, longitude, deviceFingerprint },
+  ) {
     if (!sessionId || !latitude || !longitude) {
       const error = new Error("Missing required session ID or location data");
       error.status = 400;
@@ -22,7 +25,7 @@ class AttendanceService {
       throw error;
     }
 
-    // Check if attendance already marked
+    // Check if attendance already marked by this student
     const existingAttendance = await prisma.attendance.findUnique({
       where: {
         sessionId_studentId: { sessionId, studentId: studentId },
@@ -33,6 +36,25 @@ class AttendanceService {
       const error = new Error("Attendance already marked for this session");
       error.status = 400;
       throw error;
+    }
+
+    // Device fingerprint check — prevent same device from marking for multiple students
+    if (deviceFingerprint) {
+      const deviceAlreadyUsed = await prisma.attendance.findFirst({
+        where: {
+          sessionId,
+          deviceFingerprint,
+          studentId: { not: studentId }, // different student, same device
+        },
+      });
+
+      if (deviceAlreadyUsed) {
+        const error = new Error(
+          "Attendance has already been marked from this device for another student. One device can only be used once per session.",
+        );
+        error.status = 403;
+        throw error;
+      }
     }
 
     // Calculate distance using Haversine formula
@@ -54,12 +76,13 @@ class AttendanceService {
     }
 
     try {
-      // Insert attendance record
+      // Insert attendance record with device fingerprint
       const attendance = await prisma.attendance.create({
         data: {
           sessionId,
           studentId: studentId,
           distanceMeters,
+          deviceFingerprint: deviceFingerprint || null,
         },
       });
 
