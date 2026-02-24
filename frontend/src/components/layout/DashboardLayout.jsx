@@ -16,6 +16,7 @@ export const DashboardLayout = ({ children, navigation }) => {
   const { user } = useContext(AuthContext);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -53,26 +54,46 @@ export const DashboardLayout = ({ children, navigation }) => {
             </div>
 
             <div className="flex items-center space-x-4">
-              <div className="hidden sm:flex items-center space-x-3">
-                <div className="text-right">
-                  <p className="text-sm font-bold text-slate-800 leading-none">
-                    {user?.name}
-                  </p>
-                  <p className="text-xs font-medium text-slate-500 mt-1">
-                    {user?.email}
-                  </p>
-                </div>
-                <div className="h-10 w-10 rounded-full bg-gradient-to-tr from-indigo-100 to-violet-100 border border-indigo-200 flex items-center justify-center text-indigo-700 font-bold shadow-sm">
+              <div className="relative">
+                <button
+                  onClick={() => setDropdownOpen(!dropdownOpen)}
+                  className="flex items-center justify-center h-10 w-10 rounded-full bg-gradient-to-tr from-indigo-100 to-violet-100 border border-indigo-200 text-indigo-700 font-bold shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-transform active:scale-95 hover:shadow-md"
+                >
                   {user?.name?.charAt(0).toUpperCase() || "U"}
-                </div>
+                </button>
+
+                {/* Dropdown Menu */}
+                {dropdownOpen && (
+                  <div className="origin-top-right absolute right-0 mt-2 w-56 rounded-xl shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50 overflow-hidden animation-fade-in border border-slate-100">
+                    <div className="px-4 py-3 border-b border-slate-100 bg-slate-50/50">
+                      <p className="text-sm font-bold text-slate-800 truncate">
+                        {user?.name || "User"}
+                      </p>
+                      <p className="text-xs font-medium text-slate-500 truncate mt-0.5">
+                        {user?.email || "user@geoattend.com"}
+                      </p>
+                    </div>
+                    <div className="py-1">
+                      <button
+                        onClick={() => {
+                          setDropdownOpen(false);
+                          handleLogout();
+                        }}
+                        className="w-full text-left px-4 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors flex items-center"
+                      >
+                        <LogOut className="mr-2 h-4 w-4" />
+                        Sign Out
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </div>
       </nav>
 
-      <div className="flex-1 flex overflow-hidden">
-        {/* Sidebar */}
+      <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
         {/* Mobile Sidebar overlay */}
         <div
           className={`fixed inset-0 bg-slate-800/50 z-40 transition-opacity duration-300 md:hidden ${
@@ -82,7 +103,7 @@ export const DashboardLayout = ({ children, navigation }) => {
         />
 
         <aside
-          className={`fixed md:sticky top-16 z-40 w-64 h-[calc(100vh-4rem)] bg-white border-r border-slate-200 transform transition-transform duration-300 ease-in-out ${
+          className={`fixed md:fixed top-16 z-40 w-64 h-[calc(100vh-4rem)] bg-white border-r border-slate-200 transform transition-transform duration-300 ease-in-out ${
             sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
           } flex flex-col`}
         >
@@ -90,7 +111,7 @@ export const DashboardLayout = ({ children, navigation }) => {
             <p className="text-xs font-bold tracking-wider text-slate-400 uppercase mb-4 ml-2">
               Menu
             </p>
-            <nav className="space-y-1.5">
+            <nav className="space-y-1.5 pb-4">
               {navigation.map((item) => {
                 const isActive = item.active;
                 const Icon = item.icon;
@@ -120,43 +141,16 @@ export const DashboardLayout = ({ children, navigation }) => {
               })}
             </nav>
           </div>
-
-          {/* Sidebar Footer Logout */}
-          <div className="p-4 border-t border-slate-100">
-            <button
-              onClick={handleLogout}
-              className="w-full flex items-center px-3 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50 hover:text-red-700 rounded-xl transition-colors"
-            >
-              <LogOut className="mr-3 h-5 w-5" />
-              Sign Out
-            </button>
-          </div>
         </aside>
 
         {/* Main Content Area */}
-        <main className="flex-1 overflow-y-auto bg-slate-50/50 p-4 md:p-8">
-          <div className="max-w-7xl mx-auto h-full flex flex-col">
-            <div className="flex-1">{children}</div>
-
-            {/* Footer */}
-            <footer className="mt-auto pt-8 pb-4">
-              <div className="border-t border-slate-200/60 pt-6 flex flex-col md:flex-row justify-between items-center px-2">
-                <p className="text-sm font-medium text-slate-500">
-                  &copy; {new Date().getFullYear()} GeoAttend Pro. All rights
-                  reserved.
-                </p>
-                <div className="mt-4 md:mt-0 flex space-x-6">
-                  <span className="text-sm font-medium text-slate-400 hover:text-slate-600 cursor-pointer transition-colors">
-                    Support
-                  </span>
-                  <span className="text-sm font-medium text-slate-400 hover:text-slate-600 cursor-pointer transition-colors">
-                    Documentation
-                  </span>
-                </div>
-              </div>
-            </footer>
-          </div>
-        </main>
+        <div className="flex-1 flex flex-col relative md:ml-64 w-full h-[calc(100vh-4rem)]">
+          <main className="flex-1 overflow-y-auto bg-slate-50/50 p-4 md:p-8 w-full">
+            <div className="max-w-7xl mx-auto flex flex-col h-full">
+              <div className="flex-1">{children}</div>
+            </div>
+          </main>
+        </div>
       </div>
     </div>
   );

@@ -214,36 +214,43 @@ export const StudentHistory = ({
       </div>
 
       <div className="bg-white shadow-sm border border-gray-100 rounded-2xl overflow-hidden">
-        <div className="px-6 py-5 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
+        <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center">
           <h3 className="text-lg font-bold text-gray-900 flex items-center">
             <Clock className="w-5 h-5 mr-2 text-indigo-500" /> Recent Activity
           </h3>
         </div>
-        <ul className="divide-y divide-gray-50">
-          {!selectedSubject.sessions ||
-          selectedSubject.sessions.length === 0 ? (
-            <li className="px-6 py-12 text-center text-gray-500 font-medium">
-              No sessions recorded yet.
-            </li>
-          ) : (
-            selectedSubject.sessions.map((record, idx) => (
-              <li
-                key={idx}
-                className="px-6 py-4 hover:bg-gray-50/80 transition-colors flex items-center justify-between"
-              >
-                <div>
-                  <p className="text-sm font-bold text-gray-900">
-                    {formatDate(record.date)}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1 font-medium">
-                    Session ID: {record.sessionId.substring(0, 8)}...
-                  </p>
+
+        {!selectedSubject.sessions || selectedSubject.sessions.length === 0 ? (
+          <div className="px-6 py-12 text-center text-gray-500 font-medium">
+            No sessions recorded yet.
+          </div>
+        ) : (
+          <div className="p-6 bg-gray-50/50">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {selectedSubject.sessions.map((record, idx) => (
+                <div
+                  key={idx}
+                  className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow hover:border-indigo-200 transition-all flex flex-col justify-between h-full"
+                >
+                  <div className="flex justify-between items-start mb-4">
+                    <span className="text-sm font-bold text-gray-900">
+                      {formatDate(record.date)}
+                    </span>
+                    {getStatusBadge(record.status)}
+                  </div>
+                  <div>
+                    <p className="text-[11px] text-gray-400 font-medium uppercase tracking-wider mb-1">
+                      Session ID
+                    </p>
+                    <p className="text-xs text-gray-600 font-mono bg-gray-50 px-2 py-1 rounded inline-block">
+                      {record.sessionId}
+                    </p>
+                  </div>
                 </div>
-                <div>{getStatusBadge(record.status)}</div>
-              </li>
-            ))
-          )}
-        </ul>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

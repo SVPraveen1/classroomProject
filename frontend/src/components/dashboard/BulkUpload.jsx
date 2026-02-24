@@ -120,27 +120,30 @@ export const BulkUpload = () => {
   return (
     <div className="bg-white shadow-sm border border-slate-100 rounded-2xl p-8 mb-8">
       <div className="mb-6">
-        <h3 className="text-xl font-extrabold text-slate-900 tracking-tight">
-          Bulk Register Users
-        </h3>
-        <p className="text-sm text-slate-500 mt-1">
-          Upload a CSV file to add multiple students and teachers at once. The
-          CSV must include:{" "}
+        <p>
+          Upload a CSV file. The CSV must include:{" "}
           <strong className="text-slate-700">
             name, email, password, role
-          </strong>
-          . For students, also include:{" "}
+          </strong>{" "}
+        </p>
+
+        <p>
+          For students, also include:{" "}
           <strong className="text-slate-700">
             rollNo, branchName, guardianEmail, guardianPhone
-          </strong>
-          . For teachers: <strong className="text-slate-700">department</strong>
+          </strong> </p>
+        <p>
+          For teachers: <strong className="text-slate-700">department</strong>
         </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div>
+          <h4 className="text-sm font-bold text-slate-700 uppercase tracking-widest mb-3">
+            Upload File
+          </h4>
           {/* File Drop Area */}
-          <div className="border-2 border-dashed border-slate-300 rounded-2xl p-8 flex flex-col items-center justify-center text-center bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer relative">
+          <div className="border-2 border-dashed border-slate-300 rounded-2xl p-8 flex flex-col items-center justify-center text-center bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer relative h-48">
             <input
               type="file"
               accept=".csv"
