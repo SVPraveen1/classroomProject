@@ -1,7 +1,138 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Users, Filter, Hash } from "lucide-react";
+import { Users, Filter, Hash, Mail, X, Send, Loader2 } from "lucide-react";
 import { sessionService } from "../../services/session.service";
+import { emailService } from "../../services/email.service";
 
+/* ────────── Email Modal ────────── */
+const EmailModal = ({ student, onClose }) => {
+  const [subject, setSubject] = useState("");
+  const [message, setMessage] = useState("");
+  const [sending, setSending] = useState(false);
+  const [result, setResult] = useState(null); // { type: 'success' | 'error', text }
+
+  const handleSend = async () => {
+    if (!subject.trim() || !message.trim()) {
+      setResult({ type: "error", text: "Subject and message are required." });
+      return;
+    }
+
+    try {
+      setSending(true);
+      setResult(null);
+      await emailService.sendEmailToStudent(student.id, subject, message);
+      setResult({ type: "success", text: "Email sent successfully!" });
+      setTimeout(() => onClose(), 1500);
+    } catch (err) {
+      setResult({
+        type: "error",
+        text:
+          err.response?.data?.error ||
+          err.response?.data?.message ||
+          "Failed to send email.",
+      });
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden animate-fade-in">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-indigo-50/50">
+          <div>
+            <h3 className="text-base font-bold text-slate-800">Send Email</h3>
+            <p className="text-xs text-slate-500 mt-0.5">
+              To: <span className="font-semibold">{student.email}</span>
+              {student.guardianEmail && (
+                <span>
+                  {" "}
+                  · CC:{" "}
+                  <span className="font-semibold">{student.guardianEmail}</span>
+                </span>
+              )}
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-lg hover:bg-slate-200 transition-colors"
+          >
+            <X className="w-4 h-4 text-slate-500" />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="px-6 py-5 space-y-4">
+          <div>
+            <label className="block text-xs uppercase tracking-wider font-bold text-slate-500 mb-1.5">
+              Subject
+            </label>
+            <input
+              type="text"
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              placeholder="e.g. Attendance Warning"
+              className="block w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 focus:bg-white transition-all"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs uppercase tracking-wider font-bold text-slate-500 mb-1.5">
+              Message
+            </label>
+            <textarea
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              rows={5}
+              placeholder="Type your message here..."
+              className="block w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 focus:bg-white transition-all resize-none"
+            />
+          </div>
+
+          {result && (
+            <div
+              className={`px-4 py-2.5 rounded-xl text-sm font-medium ${
+                result.type === "success"
+                  ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
+                  : "bg-red-50 text-red-700 border border-red-100"
+              }`}
+            >
+              {result.text}
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-100 bg-slate-50/50">
+          <button
+            onClick={onClose}
+            disabled={sending}
+            className="px-4 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSend}
+            disabled={sending}
+            className="inline-flex items-center gap-2 px-5 py-2 text-sm font-bold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 transition-colors disabled:opacity-60"
+          >
+            {sending ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Send className="w-4 h-4" />
+            )}
+            {sending ? "Sending..." : "Send Email"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ────────── Main Component ────────── */
 export const StudentAttendanceReport = () => {
   const [students, setStudents] = useState([]);
   const [filters, setFilters] = useState({ branches: [], subjects: [] });
@@ -11,6 +142,7 @@ export const StudentAttendanceReport = () => {
   const [totalStudents, setTotalStudents] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [emailTarget, setEmailTarget] = useState(null); // student obj for modal
 
   const fetchReport = useCallback(async () => {
     try {
@@ -68,7 +200,6 @@ export const StudentAttendanceReport = () => {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {/* Branch Filter */}
           <div>
             <label className="block text-xs uppercase tracking-wider font-bold text-slate-500 mb-1.5 ml-1">
               Branch
@@ -87,7 +218,6 @@ export const StudentAttendanceReport = () => {
             </select>
           </div>
 
-          {/* Subject Filter (grouped sessions) */}
           <div>
             <label className="block text-xs uppercase tracking-wider font-bold text-slate-500 mb-1.5 ml-1">
               Subject
@@ -145,6 +275,9 @@ export const StudentAttendanceReport = () => {
                   <th className="px-6 py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">
                     Attendance %
                   </th>
+                  <th className="px-6 py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">
+                    Action
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-slate-50">
@@ -178,6 +311,15 @@ export const StudentAttendanceReport = () => {
                         {s.percentage}%
                       </span>
                     </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <button
+                        onClick={() => setEmailTarget(s)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 rounded-lg hover:bg-indigo-100 transition-colors"
+                      >
+                        <Mail className="w-3.5 h-3.5" />
+                        Send Mail
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -185,6 +327,14 @@ export const StudentAttendanceReport = () => {
           </div>
         )}
       </div>
+
+      {/* Email Modal */}
+      {emailTarget && (
+        <EmailModal
+          student={emailTarget}
+          onClose={() => setEmailTarget(null)}
+        />
+      )}
     </div>
   );
 };

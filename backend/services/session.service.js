@@ -273,6 +273,7 @@ class SessionService {
         rollNo: true,
         name: true,
         email: true,
+        guardianEmail: true,
         branchName: true,
       },
       orderBy: { rollNo: "asc" },
@@ -292,6 +293,8 @@ class SessionService {
       return {
         id: student.id,
         rollNo: student.rollNo,
+        email: student.email,
+        guardianEmail: student.guardianEmail,
         totalSessions,
         presentCount,
         absentCount: totalSessions - presentCount,
