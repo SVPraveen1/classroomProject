@@ -7,6 +7,9 @@ import {
   ArrowLeft,
   CheckCircle2,
   XCircle,
+  ArrowDownUp,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import { formatDate } from "../../utils/dateUtils";
 
@@ -40,6 +43,7 @@ export const StudentHistory = ({
   selectedSubject,
   setSelectedSubject,
 }) => {
+  const [isAscending, setIsAscending] = React.useState(false);
   if (subjects.length === 0) {
     return (
       <div className="text-center py-20 bg-white shadow-sm border border-gray-100 rounded-2xl">
@@ -157,8 +161,8 @@ export const StudentHistory = ({
         <ArrowLeft className="w-4 h-4 mr-2" /> Back to Subjects
       </button>
 
-      <div className="bg-white shadow-sm border border-gray-100 rounded-2xl p-8 mb-8 relative overflow-hidden">
-        <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between items-start gap-6">
+      <div className="bg-white shadow-sm border border-gray-100 rounded-2xl p-6 mb-8 relative overflow-hidden">
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between items-start gap-6">
           <div>
             <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-indigo-50 text-indigo-600 mb-3">
               Subject Overview
@@ -179,76 +183,107 @@ export const StudentHistory = ({
             </div>
           </div>
 
-          <div className="bg-gray-50 rounded-xl p-5 border border-gray-100 min-w-[200px]">
-            <p className="text-xs uppercase tracking-wider text-gray-500 font-bold mb-2">
+          <div className="bg-gray-50 rounded-xl p-4 border border-gray-100 w-full md:w-auto md:min-w-[180px]">
+            <p className="text-[11px] uppercase tracking-wider text-gray-500 font-bold mb-1.5">
               Current Attendance
             </p>
             <div className="flex items-end gap-2">
-              <span className="text-4xl font-black text-gray-900">
+              <span className="text-3xl font-black text-gray-900">
                 {parseFloat(selectedSubject.percentage || 0).toFixed(1)}%
               </span>
               {selectedSubject.percentage >= 75 ? (
-                <span className="text-emerald-500 flex items-center text-sm font-bold mb-1">
-                  <TrendingUp className="w-4 h-4 mr-1" /> Safe
+                <span className="text-emerald-500 flex items-center text-xs font-bold mb-1">
+                  <TrendingUp className="w-3.5 h-3.5 mr-0.5" /> Safe
                 </span>
               ) : (
-                <span className="text-red-500 flex items-center text-sm font-bold mb-1">
-                  <TrendingUp className="w-4 h-4 mr-1 rotate-180" /> Low
+                <span className="text-red-500 flex items-center text-xs font-bold mb-1">
+                  <TrendingUp className="w-3.5 h-3.5 mr-0.5 rotate-180" /> Low
                 </span>
               )}
             </div>
 
-            <div className="w-full bg-gray-200 rounded-full h-2 mt-4 overflow-hidden">
+            <div className="w-full bg-gray-200 rounded-full h-1.5 mt-3 overflow-hidden">
               <div
-                className={`h-2 rounded-full ${selectedSubject.percentage >= 75 ? "bg-emerald-500" : "bg-red-500"}`}
+                className={`h-full rounded-full ${selectedSubject.percentage >= 75 ? "bg-emerald-500" : "bg-red-500"}`}
                 style={{
                   width: `${Math.min(100, selectedSubject.percentage)}%`,
                 }}
               ></div>
             </div>
-            <p className="text-[10px] text-gray-400 font-medium uppercase mt-2 text-right">
-              75% Required
-            </p>
           </div>
         </div>
-      </div>
+      </div>  
 
       <div className="bg-white shadow-sm border border-gray-100 rounded-2xl overflow-hidden">
-        <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center">
-          <h3 className="text-lg font-bold text-gray-900 flex items-center">
-            <Clock className="w-5 h-5 mr-2 text-indigo-500" /> Recent Activity
+        <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+          <h3 className="text-base font-bold text-gray-900 flex items-center">
+            <Clock className="w-4 h-4 mr-2 text-indigo-500" /> Recent Activity
           </h3>
+          <button
+            onClick={() => setIsAscending(!isAscending)}
+            className="flex items-center text-xs font-semibold text-gray-600 bg-white hover:bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-200 shadow-sm transition-colors active:scale-95 group"
+          >
+            Sort by Date
+            {isAscending ? (
+              <ArrowUp className="w-3.5 h-3.5 ml-1.5 text-gray-400 group-hover:text-indigo-500 transition-colors" />
+            ) : (
+              <ArrowDown className="w-3.5 h-3.5 ml-1.5 text-gray-400 group-hover:text-indigo-500 transition-colors" />
+            )}
+          </button>
         </div>
 
         {!selectedSubject.sessions || selectedSubject.sessions.length === 0 ? (
-          <div className="px-6 py-12 text-center text-gray-500 font-medium">
+          <div className="px-6 py-12 text-center text-gray-500 text-sm font-medium">
             No sessions recorded yet.
           </div>
         ) : (
-          <div className="p-6 bg-gray-50/50">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {selectedSubject.sessions.map((record, idx) => (
-                <div
-                  key={idx}
-                  className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow hover:border-indigo-200 transition-all flex flex-col justify-between h-full"
-                >
-                  <div className="flex justify-between items-start mb-4">
-                    <span className="text-sm font-bold text-gray-900">
-                      {formatDate(record.date)}
-                    </span>
-                    {getStatusBadge(record.status)}
-                  </div>
-                  <div>
-                    <p className="text-[11px] text-gray-400 font-medium uppercase tracking-wider mb-1">
-                      Session ID
-                    </p>
-                    <p className="text-xs text-gray-600 font-mono bg-gray-50 px-2 py-1 rounded inline-block">
-                      {record.sessionId}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-left">
+              <thead className="text-xs text-gray-500 uppercase bg-white border-b border-gray-100">
+                <tr>
+                  <th className="px-6 py-3 font-semibold">Date</th>
+                  <th className="px-6 py-3 font-semibold">Time</th>
+                  <th className="px-6 py-3 font-semibold text-right">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {[...selectedSubject.sessions]
+                  .sort((a, b) => {
+                    const dateA = new Date(a.date);
+                    const dateB = new Date(b.date);
+                    return isAscending ? dateA - dateB : dateB - dateA;
+                  })
+                  .map((record, idx) => {
+                    const dateObj = new Date(record.date);
+                    const formattedDate = dateObj.toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    });
+                    const formattedTime = dateObj.toLocaleTimeString("en-US", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    });
+
+                    return (
+                      <tr
+                        key={idx}
+                        className="bg-white hover:bg-gray-50/50 transition-colors"
+                      >
+                        <td className="px-6 py-3.5 whitespace-nowrap font-medium text-gray-900">
+                          {formattedDate}
+                        </td>
+                        <td className="px-6 py-3.5 whitespace-nowrap text-gray-600">
+                          {formattedTime}
+                        </td>
+                        <td className="px-6 py-3.5 whitespace-nowrap text-right">
+                          {getStatusBadge(record.status)}
+                        </td>
+                      </tr>
+                    );
+                  })}
+              </tbody>
+            </table>
           </div>
         )}
       </div>

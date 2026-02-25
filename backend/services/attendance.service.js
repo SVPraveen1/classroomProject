@@ -101,8 +101,15 @@ class AttendanceService {
   }
 
   async getAttendanceHistory(studentId) {
-    // Get all sessions (created by any teacher)
+    // Get the student's registration date
+    const student = await prisma.user.findUnique({
+      where: { id: studentId },
+      select: { createdAt: true },
+    });
+
+    // Only fetch sessions created on or after the student's registration date
     const allSessions = await prisma.session.findMany({
+      where: { createdAt: { gte: student.createdAt } },
       orderBy: { createdAt: "desc" },
       include: {
         teacher: { select: { name: true } },

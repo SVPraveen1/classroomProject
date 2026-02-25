@@ -256,6 +256,7 @@ class SessionService {
       select: {
         id: true,
         subject: true,
+        createdAt: true,
         attendances: {
           select: { studentId: true },
         },
@@ -275,33 +276,56 @@ class SessionService {
         email: true,
         guardianEmail: true,
         branchName: true,
+        createdAt: true,
       },
       orderBy: { rollNo: "asc" },
     });
 
     // 3. Compute attendance for each student across filtered sessions
+    //    Only count sessions created on or after the student's registration date
     const totalSessions = sessions.length;
 
+    // Find the earliest session date to determine late registration
+    const earliestSessionDate =
+      sessions.length > 0
+        ? new Date(
+            Math.min(...sessions.map((s) => new Date(s.createdAt).getTime())),
+          )
+        : null;
+
     const studentReport = students.map((student) => {
+      const studentCreatedAt = new Date(student.createdAt);
+
+      // Filter sessions to only those on or after the student's registration
+      const eligibleSessions = sessions.filter(
+        (s) => new Date(s.createdAt) >= studentCreatedAt,
+      );
+      const eligibleCount = eligibleSessions.length;
+
       let presentCount = 0;
-      sessions.forEach((session) => {
+      eligibleSessions.forEach((session) => {
         if (session.attendances.some((a) => a.studentId === student.id)) {
           presentCount++;
         }
       });
+
+      // Student is "late registered" if their account was created after the first session
+      const isLateRegistered =
+        earliestSessionDate && studentCreatedAt > earliestSessionDate;
 
       return {
         id: student.id,
         rollNo: student.rollNo,
         email: student.email,
         guardianEmail: student.guardianEmail,
-        totalSessions,
+        totalSessions: eligibleCount,
         presentCount,
-        absentCount: totalSessions - presentCount,
+        absentCount: eligibleCount - presentCount,
         percentage:
-          totalSessions > 0
-            ? Math.round((presentCount / totalSessions) * 100)
+          eligibleCount > 0
+            ? Math.round((presentCount / eligibleCount) * 100)
             : 0,
+        isLateRegistered: !!isLateRegistered,
       };
     });
 

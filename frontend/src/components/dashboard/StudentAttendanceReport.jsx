@@ -138,6 +138,8 @@ export const StudentAttendanceReport = () => {
   const [filters, setFilters] = useState({ branches: [], subjects: [] });
   const [selectedBranch, setSelectedBranch] = useState("");
   const [selectedSubject, setSelectedSubject] = useState("");
+  const [rollNoFilter, setRollNoFilter] = useState("");
+  const [attendanceRange, setAttendanceRange] = useState("");
   const [totalSessions, setTotalSessions] = useState(0);
   const [totalStudents, setTotalStudents] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -167,6 +169,27 @@ export const StudentAttendanceReport = () => {
   useEffect(() => {
     fetchReport();
   }, [fetchReport]);
+
+  const filteredStudents = React.useMemo(() => {
+    return students.filter((s) => {
+      // 1. Roll No / Search Filter
+      if (rollNoFilter) {
+        const searchStr = `${s.rollNo || ""} ${s.name || ""}`.toLowerCase();
+        if (!searchStr.includes(rollNoFilter.toLowerCase())) return false;
+      }
+
+      // 2. Attendance Range Filter
+      if (attendanceRange) {
+        const pct = Number(s.percentage) || 0;
+        if (attendanceRange === "< 50" && pct >= 50) return false;
+        if (attendanceRange === "51-60" && (pct < 51 || pct > 60)) return false;
+        if (attendanceRange === "61-75" && (pct < 61 || pct > 75)) return false;
+        if (attendanceRange === "> 75" && pct <= 75) return false;
+      }
+
+      return true;
+    });
+  }, [students, rollNoFilter, attendanceRange]);
 
   const getPercentageColor = (pct) => {
     if (pct >= 75) return "text-emerald-700 bg-emerald-50 border-emerald-100";
@@ -199,7 +222,8 @@ export const StudentAttendanceReport = () => {
           </h3>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Branch Filter */}
           <div>
             <label className="block text-xs uppercase tracking-wider font-bold text-slate-500 mb-1.5 ml-1">
               Branch
@@ -218,6 +242,7 @@ export const StudentAttendanceReport = () => {
             </select>
           </div>
 
+          {/* Subject Filter */}
           <div>
             <label className="block text-xs uppercase tracking-wider font-bold text-slate-500 mb-1.5 ml-1">
               Subject
@@ -233,6 +258,41 @@ export const StudentAttendanceReport = () => {
                   {s.label}
                 </option>
               ))}
+            </select>
+          </div>
+
+          {/* Roll No Search */}
+          <div>
+            <label className="block text-xs uppercase tracking-wider font-bold text-slate-500 mb-1.5 ml-1">
+              Roll No
+            </label>
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search..."
+                value={rollNoFilter}
+                onChange={(e) => setRollNoFilter(e.target.value)}
+                className="block w-full pl-9 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 focus:bg-white transition-all duration-200"
+              />
+              <Hash className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+            </div>
+          </div>
+
+          {/* Attendance Range Filter */}
+          <div>
+            <label className="block text-xs uppercase tracking-wider font-bold text-slate-500 mb-1.5 ml-1">
+              Attendance %
+            </label>
+            <select
+              value={attendanceRange}
+              onChange={(e) => setAttendanceRange(e.target.value)}
+              className="block w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 focus:bg-white transition-all duration-200 appearance-none"
+            >
+              <option value="">All Ranges</option>
+              <option value="< 50">&lt; 50%</option>
+              <option value="51-60">51% - 60%</option>
+              <option value="61-75">61% - 75%</option>
+              <option value="> 75">&gt; 75%</option>
             </select>
           </div>
         </div>
@@ -251,7 +311,7 @@ export const StudentAttendanceReport = () => {
           <div className="flex items-center justify-center py-16">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
           </div>
-        ) : students.length === 0 ? (
+        ) : filteredStudents.length === 0 ? (
           <div className="text-center py-16">
             <Users className="w-10 h-10 text-slate-300 mx-auto mb-3" />
             <p className="text-sm text-slate-500 font-medium">
@@ -281,17 +341,24 @@ export const StudentAttendanceReport = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-slate-50">
-                {students.map((s) => (
+                {filteredStudents.map((s) => (
                   <tr
                     key={s.id}
                     className="hover:bg-slate-50/80 transition-colors"
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <Hash className="w-3.5 h-3.5 text-slate-400 mr-1.5" />
-                        <span className="text-sm font-bold text-slate-800">
-                          {s.rollNo || "—"}
-                        </span>
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center">
+                          <Hash className="w-3.5 h-3.5 text-slate-400 mr-1.5" />
+                          <span className="text-sm font-bold text-slate-800">
+                            {s.rollNo || "—"}
+                          </span>
+                        </div>
+                        {s.isLateRegistered && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-50 text-amber-600 border border-amber-200">
+                            Late Registered
+                          </span>
+                        )}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-center">

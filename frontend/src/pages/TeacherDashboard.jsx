@@ -83,8 +83,6 @@ const TeacherDashboard = () => {
           <p className="mt-2 text-sm text-gray-500">
             {activeTab === "session" &&
               "Start or manage your current live attendance session."}
-            {activeTab === "history" &&
-              "Review past sessions, student attendance, and export data."}
             {activeTab === "bulk" &&
               "Upload CSV files to securely add bulk students or teachers."}
             {activeTab === "students" &&
