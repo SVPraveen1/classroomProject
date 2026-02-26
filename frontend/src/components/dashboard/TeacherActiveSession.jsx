@@ -12,7 +12,7 @@ export const TeacherActiveSession = ({
 
   if (!session) {
     return (
-      <div className="text-center py-24 bg-white shadow-sm border border-gray-100 rounded-2xl max-w-2xl mx-auto">
+      <div className="text-center py-12 sm:py-24 bg-white shadow-sm border border-gray-100 rounded-2xl max-w-2xl mx-auto px-4 sm:px-6">
         <div className="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-6">
           <BookOpen className="h-10 w-10 text-indigo-500" />
         </div>
@@ -80,7 +80,7 @@ export const TeacherActiveSession = ({
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
       {/* QR Code Panel */}
-      <div className="lg:col-span-5 bg-white shadow-sm border border-slate-200 rounded-xl p-6 flex flex-col items-center justify-center relative overflow-hidden">
+      <div className="lg:col-span-5 bg-white shadow-sm border border-slate-200 rounded-xl p-4 sm:p-6 flex flex-col items-center justify-center relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 to-violet-500"></div>
 
         <h3 className="text-xl font-extrabold text-slate-800 mb-2 flex items-center tracking-tight">
@@ -93,9 +93,10 @@ export const TeacherActiveSession = ({
         <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 transform transition-transform hover:scale-105 duration-300 mb-6">
           <QRCodeSVG
             value={session.id}
-            size={240}
+            size={200}
             level="H"
             includeMargin={false}
+            className="w-full max-w-[240px] h-auto"
           />
         </div>
         <p className="text-sm font-medium text-slate-500 text-center px-4 max-w-xs">
@@ -141,7 +142,7 @@ export const TeacherActiveSession = ({
                   key={record.id}
                   className="px-6 py-4 hover:bg-white transition-colors group"
                 >
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center">
                       <span className="h-12 w-12 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xl shadow-inner border border-indigo-100">
                         {(record.student.rollNo || record.student.name)

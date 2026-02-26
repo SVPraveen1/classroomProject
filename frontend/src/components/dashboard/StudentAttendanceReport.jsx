@@ -200,7 +200,7 @@ export const StudentAttendanceReport = () => {
   return (
     <div className="space-y-6">
       {/* Stats + Filters Bar */}
-      <div className="bg-white shadow-sm border border-slate-100 rounded-2xl p-6">
+      <div className="bg-white shadow-sm border border-slate-100 rounded-2xl p-4 sm:p-6">
         {/* Summary Stats */}
         <div className="flex flex-wrap items-center gap-4 mb-5">
           <div className="flex items-center gap-2 bg-indigo-50 text-indigo-700 px-4 py-2 rounded-xl border border-indigo-100">
@@ -323,19 +323,19 @@ export const StudentAttendanceReport = () => {
             <table className="min-w-full divide-y divide-slate-100">
               <thead className="bg-slate-50/80">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
                     Roll No
                   </th>
-                  <th className="px-6 py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  <th className="px-3 sm:px-6 py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">
                     Present
                   </th>
-                  <th className="px-6 py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  <th className="px-3 sm:px-6 py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">
                     Absent
                   </th>
-                  <th className="px-6 py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">
-                    Attendance %
+                  <th className="px-3 sm:px-6 py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">
+                    <span className="hidden sm:inline">Attendance</span> %
                   </th>
-                  <th className="px-6 py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  <th className="px-3 sm:px-6 py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">
                     Action
                   </th>
                 </tr>
@@ -346,7 +346,7 @@ export const StudentAttendanceReport = () => {
                     key={s.id}
                     className="hover:bg-slate-50/80 transition-colors"
                   >
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                       <div className="flex items-center gap-2">
                         <div className="flex items-center">
                           <Hash className="w-3.5 h-3.5 text-slate-400 mr-1.5" />
@@ -361,30 +361,30 @@ export const StudentAttendanceReport = () => {
                         )}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                    <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-center">
                       <span className="text-sm font-bold text-emerald-600">
                         {s.presentCount}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                    <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-center">
                       <span className="text-sm font-bold text-red-500">
                         {s.absentCount}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                    <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-center">
                       <span
                         className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border ${getPercentageColor(s.percentage)}`}
                       >
                         {s.percentage}%
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                    <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-center">
                       <button
                         onClick={() => setEmailTarget(s)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 rounded-lg hover:bg-indigo-100 transition-colors"
+                        className="inline-flex items-center gap-1.5 px-2 sm:px-3 py-1.5 text-xs font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 rounded-lg hover:bg-indigo-100 transition-colors"
                       >
                         <Mail className="w-3.5 h-3.5" />
-                        Send Mail
+                        <span className="hidden sm:inline">Send Mail</span>
                       </button>
                     </td>
                   </tr>

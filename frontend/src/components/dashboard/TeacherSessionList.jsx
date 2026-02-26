@@ -133,14 +133,14 @@ export const TeacherSessionList = ({
         <ArrowLeft className="w-4 h-4 mr-2" /> Back to Subject List
       </button>
 
-      <div className="bg-white shadow-sm border border-gray-100 rounded-2xl p-8 mb-8 relative overflow-hidden">
+      <div className="bg-white shadow-sm border border-gray-100 rounded-2xl p-4 sm:p-8 mb-6 sm:mb-8 relative overflow-hidden">
         <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between items-start gap-6">
           <div>
             <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-indigo-50 text-indigo-600 mb-3">
               Subject Overview
             </div>
             <div className="flex flex-col sm:flex-row sm:items-baseline sm:gap-4">
-              <h3 className="text-3xl font-extrabold text-gray-900 tracking-tight mb-1">
+              <h3 className="text-xl sm:text-3xl font-extrabold text-gray-900 tracking-tight mb-1">
                 {selectedSubject.subject} Analytics
               </h3>
               <p className="text-sm text-gray-500 font-medium">
@@ -205,175 +205,177 @@ export const TeacherSessionList = ({
       </div>
 
       <div className="bg-white shadow-sm border border-gray-100 rounded-2xl overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-100">
-          <thead className="bg-gray-50/50">
-            <tr>
-              <th className="px-6 py-4 text-left">
-                <button
-                  onClick={() => setIsAscending(!isAscending)}
-                  className="flex items-center text-xs font-semibold text-gray-600 bg-white hover:bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-200 shadow-sm transition-colors active:scale-95 group"
-                >
-                  Sort by Date & Time
-                  {isAscending ? (
-                    <ArrowUp className="w-3.5 h-3.5 ml-1.5 text-gray-400 group-hover:text-indigo-500 transition-colors" />
-                  ) : (
-                    <ArrowDown className="w-3.5 h-3.5 ml-1.5 text-gray-400 group-hover:text-indigo-500 transition-colors" />
-                  )}
-                </button>
-              </th>
-              <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                Total Attended
-              </th>
-              <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                Status
-              </th>
-              <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                Action
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-50">
-            {[...selectedSubject.sessions]
-              .sort((a, b) => {
-                const dateA = new Date(a.date);
-                const dateB = new Date(b.date);
-                return isAscending ? dateA - dateB : dateB - dateA;
-              })
-              .map((s) => (
-                <React.Fragment key={s.id}>
-                  <tr className="hover:bg-gray-50/80 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">
-                      {formatDate(s.date)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700">
-                        {s.attendedCount} / {selectedSubject.totalStudents}{" "}
-                        Students
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {s.isActive ? (
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-yellow-50 text-yellow-700 animate-pulse">
-                          LIVE
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-100">
+            <thead className="bg-gray-50/50">
+              <tr>
+                <th className="px-6 py-4 text-left">
+                  <button
+                    onClick={() => setIsAscending(!isAscending)}
+                    className="flex items-center text-xs font-semibold text-gray-600 bg-white hover:bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-200 shadow-sm transition-colors active:scale-95 group"
+                  >
+                    Sort by Date & Time
+                    {isAscending ? (
+                      <ArrowUp className="w-3.5 h-3.5 ml-1.5 text-gray-400 group-hover:text-indigo-500 transition-colors" />
+                    ) : (
+                      <ArrowDown className="w-3.5 h-3.5 ml-1.5 text-gray-400 group-hover:text-indigo-500 transition-colors" />
+                    )}
+                  </button>
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  Total Attended
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  Action
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-50">
+              {[...selectedSubject.sessions]
+                .sort((a, b) => {
+                  const dateA = new Date(a.date);
+                  const dateB = new Date(b.date);
+                  return isAscending ? dateA - dateB : dateB - dateA;
+                })
+                .map((s) => (
+                  <React.Fragment key={s.id}>
+                    <tr className="hover:bg-gray-50/80 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">
+                        {formatDate(s.date)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700">
+                          {s.attendedCount} / {selectedSubject.totalStudents}{" "}
+                          Students
                         </span>
-                      ) : (
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-600">
-                          Completed
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <button
-                        onClick={() =>
-                          setExpandedSession(
-                            expandedSession === s.id ? null : s.id,
-                          )
-                        }
-                        className="text-indigo-600 hover:text-indigo-800 text-sm font-semibold flex items-center bg-indigo-50 px-4 py-2 rounded-lg transition-colors"
-                      >
-                        {expandedSession === s.id
-                          ? "Close Class List"
-                          : "View Class List"}
-                        {expandedSession === s.id ? (
-                          <ChevronUp className="w-4 h-4 ml-2" />
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {s.isActive ? (
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-yellow-50 text-yellow-700 animate-pulse">
+                            LIVE
+                          </span>
                         ) : (
-                          <ChevronDown className="w-4 h-4 ml-2" />
-                        )}
-                      </button>
-                    </td>
-                  </tr>
-
-                  {/* Expanded Attendee Details */}
-                  {expandedSession === s.id && (
-                    <tr>
-                      <td
-                        colSpan="4"
-                        className="px-6 py-6 bg-gray-50/50 border-t border-gray-100"
-                      >
-                        {allStudents.length === 0 ? (
-                          <div className="text-center py-4">
-                            <Users className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                            <p className="text-sm text-gray-500 font-medium">
-                              No students enrolled in the system.
-                            </p>
-                          </div>
-                        ) : (
-                          <div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                              {allStudents.map((student) => {
-                                const record = s.attendees.find(
-                                  (a) => a.id === student.id,
-                                );
-                                const isPresent = !!record;
-
-                                return (
-                                  <div
-                                    key={student.id}
-                                    className="flex items-center bg-white p-3 rounded-xl shadow-sm border border-gray-100"
-                                  >
-                                    <span
-                                      className={`h-10 w-10 rounded-full flex items-center justify-center font-bold text-lg mr-3 ${isPresent ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600"}`}
-                                    >
-                                      {(student.rollNo || student.name)
-                                        .charAt(0)
-                                        .toUpperCase()}
-                                    </span>
-                                    <div className="flex-1 min-w-0">
-                                      <p className="text-sm font-bold text-gray-900 truncate">
-                                        {student.rollNo || student.name}
-                                      </p>
-                                      <p className="text-xs font-medium text-gray-500 truncate">
-                                        {student.email}
-                                      </p>
-                                      {isPresent && record.scannedAt && (
-                                        <p className="text-[10px] text-gray-400 mt-0.5">
-                                          Scanned:{" "}
-                                          {formatTimeOnly(record.scannedAt)}
-                                        </p>
-                                      )}
-                                    </div>
-                                    <div className="text-right ml-2 group relative">
-                                      <button
-                                        onClick={() =>
-                                          handleOverride(
-                                            s.id,
-                                            student.id,
-                                            isPresent ? "PRESENT" : "ABSENT",
-                                          )
-                                        }
-                                        className={`flex items-center px-3 py-1.5 rounded-lg border text-sm font-bold transition-colors ${
-                                          isPresent
-                                            ? "bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100"
-                                            : "bg-red-50 text-red-600 border-red-100 hover:bg-red-100"
-                                        }`}
-                                        title={`Click to mark as ${isPresent ? "Absent" : "Present"}`}
-                                      >
-                                        {isPresent ? (
-                                          <>
-                                            <CheckCircle2 className="w-3.5 h-3.5 mr-1" />{" "}
-                                            Present
-                                          </>
-                                        ) : (
-                                          <>
-                                            <XCircle className="w-3.5 h-3.5 mr-1" />{" "}
-                                            Absent
-                                          </>
-                                        )}
-                                      </button>
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </div>
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-600">
+                            Completed
+                          </span>
                         )}
                       </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <button
+                          onClick={() =>
+                            setExpandedSession(
+                              expandedSession === s.id ? null : s.id,
+                            )
+                          }
+                          className="text-indigo-600 hover:text-indigo-800 text-sm font-semibold flex items-center bg-indigo-50 px-4 py-2 rounded-lg transition-colors"
+                        >
+                          {expandedSession === s.id
+                            ? "Close Class List"
+                            : "View Class List"}
+                          {expandedSession === s.id ? (
+                            <ChevronUp className="w-4 h-4 ml-2" />
+                          ) : (
+                            <ChevronDown className="w-4 h-4 ml-2" />
+                          )}
+                        </button>
+                      </td>
                     </tr>
-                  )}
-                </React.Fragment>
-              ))}
-          </tbody>
-        </table>
+
+                    {/* Expanded Attendee Details */}
+                    {expandedSession === s.id && (
+                      <tr>
+                        <td
+                          colSpan="4"
+                          className="px-6 py-6 bg-gray-50/50 border-t border-gray-100"
+                        >
+                          {allStudents.length === 0 ? (
+                            <div className="text-center py-4">
+                              <Users className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                              <p className="text-sm text-gray-500 font-medium">
+                                No students enrolled in the system.
+                              </p>
+                            </div>
+                          ) : (
+                            <div>
+                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {allStudents.map((student) => {
+                                  const record = s.attendees.find(
+                                    (a) => a.id === student.id,
+                                  );
+                                  const isPresent = !!record;
+
+                                  return (
+                                    <div
+                                      key={student.id}
+                                      className="flex items-center bg-white p-3 rounded-xl shadow-sm border border-gray-100"
+                                    >
+                                      <span
+                                        className={`h-10 w-10 rounded-full flex items-center justify-center font-bold text-lg mr-3 ${isPresent ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600"}`}
+                                      >
+                                        {(student.rollNo || student.name)
+                                          .charAt(0)
+                                          .toUpperCase()}
+                                      </span>
+                                      <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-bold text-gray-900 truncate">
+                                          {student.rollNo || student.name}
+                                        </p>
+                                        <p className="text-xs font-medium text-gray-500 truncate">
+                                          {student.email}
+                                        </p>
+                                        {isPresent && record.scannedAt && (
+                                          <p className="text-[10px] text-gray-400 mt-0.5">
+                                            Scanned:{" "}
+                                            {formatTimeOnly(record.scannedAt)}
+                                          </p>
+                                        )}
+                                      </div>
+                                      <div className="text-right ml-2 group relative">
+                                        <button
+                                          onClick={() =>
+                                            handleOverride(
+                                              s.id,
+                                              student.id,
+                                              isPresent ? "PRESENT" : "ABSENT",
+                                            )
+                                          }
+                                          className={`flex items-center px-3 py-1.5 rounded-lg border text-sm font-bold transition-colors ${
+                                            isPresent
+                                              ? "bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100"
+                                              : "bg-red-50 text-red-600 border-red-100 hover:bg-red-100"
+                                          }`}
+                                          title={`Click to mark as ${isPresent ? "Absent" : "Present"}`}
+                                        >
+                                          {isPresent ? (
+                                            <>
+                                              <CheckCircle2 className="w-3.5 h-3.5 mr-1" />{" "}
+                                              Present
+                                            </>
+                                          ) : (
+                                            <>
+                                              <XCircle className="w-3.5 h-3.5 mr-1" />{" "}
+                                              Absent
+                                            </>
+                                          )}
+                                        </button>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
+                ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

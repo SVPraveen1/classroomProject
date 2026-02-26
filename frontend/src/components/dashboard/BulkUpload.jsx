@@ -118,7 +118,7 @@ export const BulkUpload = () => {
   };
 
   return (
-    <div className="bg-white shadow-sm border border-slate-100 rounded-2xl p-8 mb-8">
+    <div className="bg-white shadow-sm border border-slate-100 rounded-2xl p-4 sm:p-8 mb-8">
       <div className="mb-6">
         <p>
           Upload a CSV file. The CSV must include:{" "}
@@ -131,7 +131,8 @@ export const BulkUpload = () => {
           For students, also include:{" "}
           <strong className="text-slate-700">
             rollNo, branchName, guardianEmail, guardianPhone
-          </strong> </p>
+          </strong>{" "}
+        </p>
         <p>
           For teachers: <strong className="text-slate-700">department</strong>
         </p>
@@ -228,40 +229,42 @@ export const BulkUpload = () => {
           </h4>
           {preview.length > 0 ? (
             <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
-              <table className="min-w-full divide-y divide-slate-200">
-                <thead className="bg-slate-50">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
-                      Name
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
-                      Email
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
-                      Role
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 bg-white">
-                  {preview.map((row, idx) => (
-                    <tr key={idx} className="hover:bg-slate-50/50">
-                      <td className="px-4 py-3 text-sm font-medium text-slate-800 truncate max-w-[120px]">
-                        {row.name}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-slate-500 truncate max-w-[150px]">
-                        {row.email}
-                      </td>
-                      <td className="px-4 py-3 text-xs font-bold text-slate-500">
-                        <span
-                          className={`px-2 py-0.5 rounded-md ${row.role?.toUpperCase() === "TEACHER" ? "bg-indigo-50 text-indigo-700" : "bg-green-50 text-green-700"}`}
-                        >
-                          {row.role?.toUpperCase() || "STUDENT"}
-                        </span>
-                      </td>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-slate-200">
+                  <thead className="bg-slate-50">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                        Name
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                        Email
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                        Role
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 bg-white">
+                    {preview.map((row, idx) => (
+                      <tr key={idx} className="hover:bg-slate-50/50">
+                        <td className="px-4 py-3 text-sm font-medium text-slate-800 truncate max-w-[120px]">
+                          {row.name}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-slate-500 truncate max-w-[150px]">
+                          {row.email}
+                        </td>
+                        <td className="px-4 py-3 text-xs font-bold text-slate-500">
+                          <span
+                            className={`px-2 py-0.5 rounded-md ${row.role?.toUpperCase() === "TEACHER" ? "bg-indigo-50 text-indigo-700" : "bg-green-50 text-green-700"}`}
+                          >
+                            {row.role?.toUpperCase() || "STUDENT"}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
               <div className="px-4 py-2 border-t border-slate-100 bg-slate-50/50 text-xs text-slate-500 text-center font-medium">
                 Showing first {preview.length} rows
               </div>
