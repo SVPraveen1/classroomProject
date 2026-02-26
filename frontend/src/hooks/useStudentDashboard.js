@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Html5QrcodeScanner } from "html5-qrcode";
+import { useState, useEffect, useRef } from "react";
+import { Html5Qrcode } from "html5-qrcode";
 import { attendanceService } from "../services/attendance.service";
 import { getDeviceFingerprint } from "../utils/deviceFingerprint";
 
@@ -11,6 +11,7 @@ export const useStudentDashboard = () => {
 
   const [subjects, setSubjects] = useState([]);
   const [selectedSubject, setSelectedSubject] = useState(null);
+  const scannerRef = useRef(null);
 
   const fetchHistory = async () => {
     try {
@@ -27,30 +28,55 @@ export const useStudentDashboard = () => {
 
   useEffect(() => {
     if (status === "scanning") {
-      const scanner = new Html5QrcodeScanner(
-        "reader",
-        {
-          qrbox: { width: 250, height: 250 },
-          fps: 5,
-        },
-        false,
-      );
+      const html5Qrcode = new Html5Qrcode("reader");
+      scannerRef.current = html5Qrcode;
 
-      scanner.render(
-        (data) => {
-          scanner.clear();
-          setScanResult(data);
-          processAttendance(data);
-        },
-        (err) => {
-          /* Ignore frequent scan errors */
-        },
-      );
+      const startScanner = async () => {
+        try {
+          // Try back camera first (environment = rear camera)
+          await html5Qrcode.start(
+            { facingMode: "environment" },
+            { fps: 10, qrbox: { width: 250, height: 250 } },
+            (decodedText) => {
+              html5Qrcode.stop().then(() => {
+                scannerRef.current = null;
+                setScanResult(decodedText);
+                processAttendance(decodedText);
+              });
+            },
+            () => {}, // Ignore scan errors
+          );
+        } catch {
+          try {
+            // Fallback: try any available camera
+            await html5Qrcode.start(
+              { facingMode: "user" },
+              { fps: 10, qrbox: { width: 250, height: 250 } },
+              (decodedText) => {
+                html5Qrcode.stop().then(() => {
+                  scannerRef.current = null;
+                  setScanResult(decodedText);
+                  processAttendance(decodedText);
+                });
+              },
+              () => {},
+            );
+          } catch (err) {
+            setStatus("error");
+            setErrorMessage(
+              "Could not access camera. Please allow camera permissions and try again.",
+            );
+          }
+        }
+      };
+
+      startScanner();
 
       return () => {
-        scanner
-          .clear()
-          .catch((error) => console.error("Failed to clear scanner", error));
+        if (scannerRef.current && scannerRef.current.isScanning) {
+          scannerRef.current.stop().catch(() => {});
+          scannerRef.current = null;
+        }
       };
     }
   }, [status]);
