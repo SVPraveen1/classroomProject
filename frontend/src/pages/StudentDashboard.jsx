@@ -19,6 +19,8 @@ const StudentDashboard = () => {
     setSelectedSubject,
     resetState,
     fetchHistory,
+    scanImageFile,
+    uploadError,
   } = useStudentDashboard();
 
   const navigation = [
@@ -68,6 +70,8 @@ const StudentDashboard = () => {
             errorMessage={errorMessage}
             distance={distance}
             resetState={resetState}
+            scanImageFile={scanImageFile}
+            uploadError={uploadError}
             onSuccessViewRecords={() => {
               resetState();
               setActiveTab("history");

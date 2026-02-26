@@ -1,5 +1,12 @@
-import React from "react";
-import { Camera, MapPin, CheckCircle2, XCircle } from "lucide-react";
+import React, { useState, useRef, useCallback } from "react";
+import {
+  Camera,
+  MapPin,
+  CheckCircle2,
+  XCircle,
+  Upload,
+  ImageIcon,
+} from "lucide-react";
 
 export const StudentScanner = ({
   status,
@@ -8,10 +15,49 @@ export const StudentScanner = ({
   errorMessage,
   distance,
   resetState,
+  scanImageFile,
+  uploadError,
   onSuccessViewRecords,
 }) => {
+  const [isDragging, setIsDragging] = useState(false);
+  const [fileName, setFileName] = useState("");
+  const fileInputRef = useRef(null);
+
+  const handleFile = useCallback(
+    (file) => {
+      if (file && file.type.startsWith("image/")) {
+        setFileName(file.name);
+        scanImageFile(file);
+      }
+    },
+    [scanImageFile],
+  );
+
+  const handleDrop = useCallback(
+    (e) => {
+      e.preventDefault();
+      setIsDragging(false);
+      const file = e.dataTransfer.files[0];
+      handleFile(file);
+    },
+    [handleFile],
+  );
+
+  const handleDragOver = useCallback((e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e) => {
+    e.preventDefault();
+    setIsDragging(false);
+  }, []);
+
   return (
     <div className="bg-white shadow rounded-lg p-6 max-w-lg mx-auto">
+      {/* Hidden div for Html5Qrcode image scanning */}
+      <div id="image-reader" style={{ display: "none" }}></div>
+
       {status === "idle" && (
         <div className="text-center py-10">
           <Camera className="mx-auto h-16 w-16 text-indigo-500 mb-4" />
@@ -22,10 +68,90 @@ export const StudentScanner = ({
           </p>
           <button
             onClick={() => setStatus("scanning")}
-            className="w-full inline-flex justify-center items-center px-4 py-3 border border-transparent shadow-sm text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+            className="w-full inline-flex justify-center items-center px-4 py-3 border border-transparent shadow-sm text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 transition-colors"
           >
+            <Camera className="h-5 w-5 mr-2" />
             Open Camera Scanner
           </button>
+
+          {/* Divider */}
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-200"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-3 bg-white text-gray-400 font-medium">
+                or upload a QR image
+              </span>
+            </div>
+          </div>
+
+          {/* Drag & Drop + Click Upload Zone */}
+          <div
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onClick={() => fileInputRef.current?.click()}
+            className={`
+              relative cursor-pointer rounded-xl border-2 border-dashed p-8 transition-all duration-200
+              ${
+                isDragging
+                  ? "border-indigo-500 bg-indigo-50 scale-[1.02]"
+                  : "border-gray-300 bg-gray-50 hover:border-indigo-400 hover:bg-indigo-50/50"
+              }
+            `}
+          >
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files[0];
+                handleFile(file);
+                e.target.value = "";
+              }}
+            />
+            <div className="flex flex-col items-center gap-3">
+              {isDragging ? (
+                <>
+                  <Upload className="h-10 w-10 text-indigo-500 animate-bounce" />
+                  <p className="text-sm font-medium text-indigo-600">
+                    Drop your image here!
+                  </p>
+                </>
+              ) : (
+                <>
+                  <div className="p-3 bg-white rounded-full shadow-sm border border-gray-200">
+                    <ImageIcon className="h-8 w-8 text-indigo-400" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-700">
+                      Drag & drop a QR image here
+                    </p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      or click to browse files
+                    </p>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* File name display */}
+          {fileName && !uploadError && (
+            <p className="mt-3 text-xs text-gray-500 truncate">📎 {fileName}</p>
+          )}
+
+          {/* Upload error message */}
+          {uploadError && (
+            <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-sm text-red-600 font-medium">{uploadError}</p>
+              <p className="text-xs text-red-400 mt-1">
+                Try a clearer image or use the camera scanner instead.
+              </p>
+            </div>
+          )}
         </div>
       )}
 

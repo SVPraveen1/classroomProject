@@ -129,11 +129,32 @@ export const useStudentDashboard = () => {
     );
   };
 
+  const [uploadError, setUploadError] = useState("");
+
+  const scanImageFile = async (file) => {
+    if (!file) return;
+    setUploadError("");
+
+    const html5Qrcode = new Html5Qrcode("image-reader");
+    try {
+      const result = await html5Qrcode.scanFileV2(file, true);
+      setScanResult(result.decodedText);
+      processAttendance(result.decodedText);
+    } catch (err) {
+      setUploadError(
+        "No QR code found in the image. Please try a clearer image.",
+      );
+    } finally {
+      html5Qrcode.clear();
+    }
+  };
+
   const resetState = () => {
     setScanResult(null);
     setStatus("idle");
     setErrorMessage("");
     setDistance(null);
+    setUploadError("");
   };
 
   return {
@@ -147,5 +168,7 @@ export const useStudentDashboard = () => {
     setSelectedSubject,
     resetState,
     fetchHistory,
+    scanImageFile,
+    uploadError,
   };
 };
