@@ -25,6 +25,45 @@ export const TeacherSessionList = ({
   const [isExporting, setIsExporting] = useState(false);
   const [isAscending, setIsAscending] = useState(false);
 
+  // Local overrides for optimistic UI: key = "sessionId-studentId", value = "PRESENT" | "ABSENT"
+  const [localOverrides, setLocalOverrides] = useState({});
+
+  const handleOptimisticToggle = (sessionId, studentId, currentStatus) => {
+    const newStatus = currentStatus === "PRESENT" ? "ABSENT" : "PRESENT";
+    const key = `${sessionId}-${studentId}`;
+
+    // Immediately update local override so UI toggles instantly
+    setLocalOverrides((prev) => ({ ...prev, [key]: newStatus }));
+
+    // Fire the API call in the background
+    handleOverride(sessionId, studentId, currentStatus).catch((err) => {
+      console.error("Failed to override attendance, reverting", err);
+      // Rollback: remove the override so it falls back to server data
+      setLocalOverrides((prev) => {
+        const updated = { ...prev };
+        delete updated[key];
+        return updated;
+      });
+    });
+  };
+
+  // Helper: determine if a student is present for a given session,
+  // checking local overrides first, then falling back to server data
+  const getStudentStatus = (session, studentId) => {
+    const key = `${session.id}-${studentId}`;
+    if (localOverrides[key] !== undefined) {
+      return localOverrides[key] === "PRESENT";
+    }
+    return !!session.attendees.find((a) => a.id === studentId);
+  };
+
+  // Helper: compute attended count for a session, considering local overrides
+  const getAttendedCount = (session) => {
+    return allStudents.filter((student) =>
+      getStudentStatus(session, student.id),
+    ).length;
+  };
+
   const handleDownloadCsv = async () => {
     if (!selectedSubject) return;
     try {
@@ -248,8 +287,8 @@ export const TeacherSessionList = ({
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700">
-                          {s.attendedCount} / {selectedSubject.totalStudents}{" "}
-                          Students
+                          {getAttendedCount(s)} /{" "}
+                          {selectedSubject.totalStudents} Students
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -305,7 +344,10 @@ export const TeacherSessionList = ({
                                   const record = s.attendees.find(
                                     (a) => a.id === student.id,
                                   );
-                                  const isPresent = !!record;
+                                  const isPresent = getStudentStatus(
+                                    s,
+                                    student.id,
+                                  );
 
                                   return (
                                     <div
@@ -326,17 +368,19 @@ export const TeacherSessionList = ({
                                         <p className="text-xs font-medium text-gray-500 truncate">
                                           {student.email}
                                         </p>
-                                        {isPresent && record.scannedAt && (
-                                          <p className="text-[10px] text-gray-400 mt-0.5">
-                                            Scanned:{" "}
-                                            {formatTimeOnly(record.scannedAt)}
-                                          </p>
-                                        )}
+                                        {isPresent &&
+                                          record &&
+                                          record.scannedAt && (
+                                            <p className="text-[10px] text-gray-400 mt-0.5">
+                                              Scanned:{" "}
+                                              {formatTimeOnly(record.scannedAt)}
+                                            </p>
+                                          )}
                                       </div>
                                       <div className="text-right ml-2 group relative">
                                         <button
                                           onClick={() =>
-                                            handleOverride(
+                                            handleOptimisticToggle(
                                               s.id,
                                               student.id,
                                               isPresent ? "PRESENT" : "ABSENT",

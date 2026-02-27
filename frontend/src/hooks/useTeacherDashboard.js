@@ -108,14 +108,8 @@ export const useTeacherDashboard = () => {
   };
 
   const handleOverride = async (sessionId, studentId, currentStatus) => {
-    try {
-      const newStatus = currentStatus === "PRESENT" ? "ABSENT" : "PRESENT";
-      await sessionService.overrideAttendance(sessionId, studentId, newStatus);
-      fetchHistory(); // refresh data
-    } catch (err) {
-      console.error("Failed to override attendance", err);
-      setError("Failed to override attendance");
-    }
+    const newStatus = currentStatus === "PRESENT" ? "ABSENT" : "PRESENT";
+    await sessionService.overrideAttendance(sessionId, studentId, newStatus);
   };
 
   return {
