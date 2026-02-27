@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import { QRCodeSVG } from "qrcode.react";
-import { MapPin, Users, CheckCircle2, BookOpen } from "lucide-react";
+import { MapPin, Users, CheckCircle2, BookOpen, Download } from "lucide-react";
 
 export const TeacherActiveSession = ({
   session,
@@ -9,6 +9,44 @@ export const TeacherActiveSession = ({
   startSession,
 }) => {
   const [subjectInput, setSubjectInput] = useState("");
+  const qrRef = useRef(null);
+
+  const handleDownloadQR = useCallback(() => {
+    if (!qrRef.current || !session) return;
+    const svgEl = qrRef.current.querySelector("svg");
+    if (!svgEl) return;
+
+    const svgData = new XMLSerializer().serializeToString(svgEl);
+    const svgBlob = new Blob([svgData], {
+      type: "image/svg+xml;charset=utf-8",
+    });
+    const url = URL.createObjectURL(svgBlob);
+
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      const padding = 32;
+      canvas.width = img.width + padding * 2;
+      canvas.height = img.height + padding * 2;
+      const ctx = canvas.getContext("2d");
+
+      // White background
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, padding, padding);
+
+      URL.revokeObjectURL(url);
+
+      const pngUrl = canvas.toDataURL("image/png");
+      const a = document.createElement("a");
+      a.href = pngUrl;
+      a.download = `QR_${session.subject.replace(/\s+/g, "_")}_${new Date().toISOString().slice(0, 10)}.png`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    };
+    img.src = url;
+  }, [session]);
 
   if (!session) {
     return (
@@ -90,7 +128,10 @@ export const TeacherActiveSession = ({
           {session.subject}
         </div>
 
-        <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 transform transition-transform hover:scale-105 duration-300 mb-6">
+        <div
+          ref={qrRef}
+          className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 transform transition-transform hover:scale-105 duration-300 mb-4"
+        >
           <QRCodeSVG
             value={session.id}
             size={200}
@@ -99,6 +140,15 @@ export const TeacherActiveSession = ({
             className="w-full max-w-[240px] h-auto"
           />
         </div>
+
+        <button
+          onClick={handleDownloadQR}
+          className="inline-flex items-center gap-2 px-4 py-2 mb-4 text-sm font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 rounded-xl hover:bg-indigo-100 transition-colors active:scale-95"
+        >
+          <Download className="w-4 h-4" />
+          Download QR
+        </button>
+
         <p className="text-sm font-medium text-slate-500 text-center px-4 max-w-xs">
           Students must scan this code using their GeoAttend app while in the
           classroom.
