@@ -8,32 +8,35 @@ datasource db {
 }
 
 model User {
-  id            Int          @id @default(autoincrement())
-  rollNo        String?      @unique
-  name          String
-  email         String       @unique
-  passwordHash  String
-  role          Role         @default(STUDENT)
-  branchName    String?
-  guardianEmail String?
-  guardianPhone String?
-  department    String?
-  sessions      Session[] // A teacher can have many sessions
-  attendances   Attendance[]
-  createdAt     DateTime     @default(now())
+  id                    Int            @id @default(autoincrement())
+  rollNo                String?        @unique
+  name                  String
+  email                 String         @unique
+  passwordHash          String
+  role                  Role           @default(STUDENT)
+  branchName            String?
+  guardianEmail         String?
+  guardianPhone         String?
+  department            String?
+  sessions              Session[] // A teacher can have many sessions
+  attendances           Attendance[]
+  leaveRequests         LeaveRequest[] @relation("StudentLeaveRequests")
+  reviewedLeaveRequests LeaveRequest[] @relation("ReviewedLeaveRequests")
+  createdAt             DateTime       @default(now())
 }
 
 model Session {
-  id          String       @id @default(uuid())
-  subject     String       @default("General")
-  teacherId   Int
-  teacher     User         @relation(fields: [teacherId], references: [id])
-  latitude    Float
-  longitude   Float
-  isActive    Boolean      @default(true)
-  attendances Attendance[]
-  createdAt   DateTime     @default(now())
-  expiresAt   DateTime?
+  id            String         @id @default(uuid())
+  subject       String         @default("General")
+  teacherId     Int
+  teacher       User           @relation(fields: [teacherId], references: [id])
+  latitude      Float
+  longitude     Float
+  isActive      Boolean        @default(true)
+  attendances   Attendance[]
+  leaveRequests LeaveRequest[]
+  createdAt     DateTime       @default(now())
+  expiresAt     DateTime?
 }
 
 model Attendance {
@@ -45,8 +48,33 @@ model Attendance {
   scannedAt         DateTime @default(now())
   distanceMeters    Float
   deviceFingerprint String?
+  isLeaveApproved   Boolean  @default(false)
 
   @@unique([sessionId, studentId]) // A student can only mark attendance once per session
+}
+
+model LeaveRequest {
+  id            Int         @id @default(autoincrement())
+  studentId     Int
+  student       User        @relation("StudentLeaveRequests", fields: [studentId], references: [id])
+  sessionId     String? // If requesting for specific past session
+  session       Session?    @relation(fields: [sessionId], references: [id])
+  subject       String // Required for future date requests
+  leaveDate     DateTime? // For future date requests (when sessionId is null)
+  reason        String      @db.Text
+  status        LeaveStatus @default(PENDING)
+  reviewedBy    Int?
+  reviewer      User?       @relation("ReviewedLeaveRequests", fields: [reviewedBy], references: [id])
+  reviewComment String?     @db.Text
+  reviewedAt    DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 enum Role {

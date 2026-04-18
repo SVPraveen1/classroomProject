@@ -1,4 +1,5 @@
 const { PrismaClient } = require("@prisma/client");
+const leaveService = require("./leave.service");
 
 const prisma = new PrismaClient();
 
@@ -26,6 +27,13 @@ class SessionService {
         isActive: true,
       },
     });
+
+    // Auto-mark attendance for approved leave requests covering today + this subject
+    await leaveService.autoMarkLeaveForNewSession(
+      session.id,
+      session.subject,
+      session.createdAt,
+    );
 
     return {
       message: "Session started successfully",
@@ -113,6 +121,7 @@ class SessionService {
           email: a.student.email,
           rollNo: a.student.rollNo,
           scannedAt: a.scannedAt,
+          isLeaveApproved: a.isLeaveApproved,
         })),
       });
     });

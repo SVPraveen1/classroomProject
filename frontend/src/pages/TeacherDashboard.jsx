@@ -1,14 +1,15 @@
 import React, { useState } from "react";
-import { MapPin, Clock, Upload, Users } from "lucide-react";
+import { MapPin, Clock, Upload, Users, FileText } from "lucide-react";
 import { useTeacherDashboard } from "../hooks/useTeacherDashboard";
 import { TeacherActiveSession } from "../components/dashboard/TeacherActiveSession";
 import { TeacherSessionList } from "../components/dashboard/TeacherSessionList";
 import { DashboardLayout } from "../components/layout/DashboardLayout";
 import { BulkUpload } from "../components/dashboard/BulkUpload";
 import { StudentAttendanceReport } from "../components/dashboard/StudentAttendanceReport";
+import { TeacherLeaveManagement } from "../components/dashboard/TeacherLeaveManagement";
 
 const TeacherDashboard = () => {
-  const [activeTab, setActiveTab] = useState("session"); // 'session', 'history', 'students', or 'bulk'
+  const [activeTab, setActiveTab] = useState("session"); // 'session', 'history', 'students', 'bulk', or 'leave'
 
   const {
     session,
@@ -68,6 +69,16 @@ const TeacherDashboard = () => {
         setSelectedSubject(null);
       },
     },
+    {
+      id: "leave",
+      name: "Leave Requests",
+      icon: FileText,
+      active: activeTab === "leave",
+      onClick: () => {
+        setActiveTab("leave");
+        setSelectedSubject(null);
+      },
+    },
   ];
 
   return (
@@ -79,6 +90,7 @@ const TeacherDashboard = () => {
             {activeTab === "history" && "Subject Analytics"}
             {activeTab === "bulk" && "Bulk Registration"}
             {activeTab === "students" && "Student Attendance Report"}
+            {activeTab === "leave" && "Leave Request Management"}
           </h2>
           <p className="mt-2 text-sm text-gray-500">
             {activeTab === "session" &&
@@ -87,6 +99,8 @@ const TeacherDashboard = () => {
               "Upload CSV files to securely add bulk students or teachers."}
             {activeTab === "students" &&
               "View all students with attendance stats. Filter by branch or session."}
+            {activeTab === "leave" &&
+              "Review and approve student leave requests for your subjects."}
           </p>
         </div>
         <div className="mt-4 flex md:mt-0 md:ml-4">
@@ -148,6 +162,13 @@ const TeacherDashboard = () => {
       {activeTab === "students" && (
         <div className="animation-fade-in">
           <StudentAttendanceReport />
+        </div>
+      )}
+
+      {/* ─── LEAVE REQUEST MANAGEMENT TAB ─── */}
+      {activeTab === "leave" && (
+        <div className="animation-fade-in">
+          <TeacherLeaveManagement />
         </div>
       )}
     </DashboardLayout>
