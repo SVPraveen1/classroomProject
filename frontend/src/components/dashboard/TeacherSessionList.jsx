@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   CalendarDays,
   BookOpen,
@@ -10,9 +10,13 @@ import {
   XCircle,
   ArrowUp,
   ArrowDown,
+  FileText,
+  MessageSquare,
+  X,
 } from "lucide-react";
 import { formatDate, formatTimeOnly } from "../../utils/dateUtils";
 import { sessionService } from "../../services/session.service";
+import { leaveService } from "../../services/leave.service";
 
 export const TeacherSessionList = ({
   subjects,
@@ -27,6 +31,50 @@ export const TeacherSessionList = ({
 
   // Local overrides for optimistic UI: key = "sessionId-studentId", value = "PRESENT" | "ABSENT"
   const [localOverrides, setLocalOverrides] = useState({});
+
+  // Leave requests for expanded session
+  const [sessionLeaveRequests, setSessionLeaveRequests] = useState({});
+  const [reviewingRequest, setReviewingRequest] = useState(null);
+  const [reviewComment, setReviewComment] = useState("");
+  const [reviewStatus, setReviewStatus] = useState("APPROVED");
+
+  // Fetch leave requests when session is expanded
+  useEffect(() => {
+    if (expandedSession && !sessionLeaveRequests[expandedSession]) {
+      fetchSessionLeaveRequests(expandedSession);
+    }
+  }, [expandedSession]);
+
+  const fetchSessionLeaveRequests = async (sessionId) => {
+    try {
+      const res = await leaveService.getSessionLeaveRequests(sessionId);
+      setSessionLeaveRequests((prev) => ({
+        ...prev,
+        [sessionId]: res.requests || [],
+      }));
+    } catch (err) {
+      console.error("Failed to fetch leave requests", err);
+    }
+  };
+
+  const handleReviewLeave = async () => {
+    if (!reviewingRequest) return;
+    try {
+      await leaveService.reviewLeaveRequest(
+        reviewingRequest.id,
+        reviewStatus,
+        reviewComment,
+      );
+      setReviewingRequest(null);
+      setReviewComment("");
+      // Refresh leave requests for this session
+      if (expandedSession) {
+        fetchSessionLeaveRequests(expandedSession);
+      }
+    } catch (err) {
+      console.error("Failed to review leave", err);
+    }
+  };
 
   const handleOptimisticToggle = (sessionId, studentId, currentStatus) => {
     const newStatus = currentStatus === "PRESENT" ? "ABSENT" : "PRESENT";
@@ -338,7 +386,62 @@ export const TeacherSessionList = ({
                               </p>
                             </div>
                           ) : (
-                            <div>
+                            <div className="space-y-6">
+                              {/* Leave Requests Section */}
+                              {sessionLeaveRequests[s.id] &&
+                                sessionLeaveRequests[s.id].length > 0 && (
+                                  <div className="mb-6 bg-amber-50 border border-amber-200 rounded-xl p-4">
+                                    <div className="flex items-center gap-2 mb-3">
+                                      <FileText className="w-4 h-4 text-amber-600" />
+                                      <h4 className="text-sm font-bold text-amber-900">
+                                        Leave Requests ({sessionLeaveRequests[s.id].length})
+                                      </h4>
+                                    </div>
+                                    <div className="space-y-2">
+                                      {sessionLeaveRequests[s.id].map((req) => (
+                                        <div
+                                          key={req.id}
+                                          className="flex items-center justify-between bg-white p-3 rounded-lg border border-amber-100"
+                                        >
+                                          <div>
+                                            <p className="text-sm font-bold text-slate-800">
+                                              {req.student.name} ({req.student.rollNo})
+                                            </p>
+                                            <p className="text-xs text-slate-600 mt-1">
+                                              {req.reason}
+                                            </p>
+                                            {req.status === "PENDING" ? (
+                                              <span className="inline-block mt-1 px-2 py-0.5 bg-yellow-100 text-yellow-700 text-xs font-bold rounded">
+                                                Pending
+                                              </span>
+                                            ) : req.status === "APPROVED" ? (
+                                              <span className="inline-block mt-1 px-2 py-0.5 bg-green-100 text-green-700 text-xs font-bold rounded">
+                                                Approved
+                                              </span>
+                                            ) : (
+                                              <span className="inline-block mt-1 px-2 py-0.5 bg-red-100 text-red-700 text-xs font-bold rounded">
+                                                Rejected
+                                              </span>
+                                            )}
+                                          </div>
+                                          {req.status === "PENDING" && (
+                                            <button
+                                              onClick={() => {
+                                                setReviewingRequest(req);
+                                                setReviewStatus("APPROVED");
+                                                setReviewComment("");
+                                              }}
+                                              className="px-3 py-1 bg-indigo-600 text-white rounded-lg text-xs font-bold hover:bg-indigo-700"
+                                            >
+                                              Review
+                                            </button>
+                                          )}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+
                               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 {allStudents.map((student) => {
                                   const record = s.attendees.find(
@@ -368,14 +471,21 @@ export const TeacherSessionList = ({
                                         <p className="text-xs font-medium text-gray-500 truncate">
                                           {student.email}
                                         </p>
-                                        {isPresent &&
-                                          record &&
-                                          record.scannedAt && (
-                                            <p className="text-[10px] text-gray-400 mt-0.5">
-                                              Scanned:{" "}
-                                              {formatTimeOnly(record.scannedAt)}
-                                            </p>
-                                          )}
+                                        {isPresent && record && (
+                                          <>
+                                            {record.scannedAt && (
+                                              <p className="text-[10px] text-gray-400 mt-0.5">
+                                                Scanned:{" "}
+                                                {formatTimeOnly(record.scannedAt)}
+                                              </p>
+                                            )}
+                                            {s.attendees.find((a) => a.id === student.id)?.isLeaveApproved && (
+                                              <span className="inline-block mt-1 px-2 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-bold rounded">
+                                                Leave Approved
+                                              </span>
+                                            )}
+                                          </>
+                                        )}
                                       </div>
                                       <div className="text-right ml-2 group relative">
                                         <button
@@ -421,6 +531,83 @@ export const TeacherSessionList = ({
           </table>
         </div>
       </div>
+
+      {/* Leave Review Modal */}
+      {reviewingRequest && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+          onClick={(e) => e.target === e.currentTarget && setReviewingRequest(null)}
+        >
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-indigo-50/50">
+              <h3 className="text-base font-bold text-slate-800">
+                Review Leave Request
+              </h3>
+              <button
+                onClick={() => setReviewingRequest(null)}
+                className="p-1.5 rounded-lg hover:bg-slate-200 transition-colors"
+              >
+                <X className="w-4 h-4 text-slate-500" />
+              </button>
+            </div>
+
+            <div className="px-6 py-5 space-y-4">
+              <div className="p-4 bg-slate-50 rounded-xl">
+                <p className="text-sm font-bold text-slate-700 mb-1">
+                  {reviewingRequest.student.name} ({reviewingRequest.student.rollNo})
+                </p>
+                <p className="text-sm text-slate-600 mt-2">
+                  {reviewingRequest.reason}
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-600 mb-2">
+                  Decision
+                </label>
+                <select
+                  value={reviewStatus}
+                  onChange={(e) => setReviewStatus(e.target.value)}
+                  className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="APPROVED">Approve</option>
+                  <option value="REJECTED">Reject</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-600 mb-2">
+                  Comment (Optional)
+                </label>
+                <textarea
+                  value={reviewComment}
+                  onChange={(e) => setReviewComment(e.target.value)}
+                  rows={3}
+                  placeholder="Add feedback..."
+                  className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setReviewingRequest(null)}
+                  className="flex-1 px-4 py-2 border border-slate-200 rounded-xl font-medium text-slate-600 hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleReviewLeave}
+                  className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700"
+                >
+                  Submit
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
