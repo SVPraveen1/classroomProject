@@ -1,9 +1,9 @@
 import api from "../api";
 
 export const attendanceService = {
-  markAttendance: async (sessionId, latitude, longitude, deviceFingerprint) => {
+  markAttendance: async (qrToken, latitude, longitude, deviceFingerprint) => {
     const response = await api.post("/attendance/mark", {
-      sessionId,
+      qrToken,
       latitude,
       longitude,
       deviceFingerprint,

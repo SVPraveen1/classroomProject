@@ -20,6 +20,13 @@ export const sessionService = {
     return response.data;
   },
 
+  getQrToken: async (sessionId, { signal } = {}) => {
+    const response = await api.get(`/session/${sessionId}/qr-token`, {
+      signal,
+    });
+    return response.data;
+  },
+
   getSessionAttendees: async (sessionId) => {
     const response = await api.get(`/session/${sessionId}/attendance`);
     return response.data;

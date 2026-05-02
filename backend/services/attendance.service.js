@@ -1,18 +1,21 @@
 const { PrismaClient } = require("@prisma/client");
 const { calculateDistance } = require("../utils/geolocation");
+const qrToken = require("../utils/qrToken");
 
 const prisma = new PrismaClient();
 
 class AttendanceService {
   async markAttendance(
     studentId,
-    { sessionId, latitude, longitude, deviceFingerprint },
+    { qrToken: token, latitude, longitude, deviceFingerprint },
   ) {
-    if (!sessionId || !latitude || !longitude) {
-      const error = new Error("Missing required session ID or location data");
+    if (!token || latitude === undefined || longitude === undefined) {
+      const error = new Error("Missing required QR token or location data");
       error.status = 400;
       throw error;
     }
+
+    const { sessionId, issuedAt } = qrToken.verify(token);
 
     // Find the active session
     const session = await prisma.session.findUnique({
@@ -76,13 +79,14 @@ class AttendanceService {
     }
 
     try {
-      // Insert attendance record with device fingerprint
+      // Insert attendance record with device fingerprint and QR token timestamp
       const attendance = await prisma.attendance.create({
         data: {
           sessionId,
           studentId: studentId,
           distanceMeters,
           deviceFingerprint: deviceFingerprint || null,
+          qrTimestamp: BigInt(issuedAt),
         },
       });
 

@@ -1,6 +1,25 @@
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { MapPin, Users, CheckCircle2, BookOpen, Download } from "lucide-react";
+import { useRotatingQrToken } from "../../hooks/useRotatingQrToken";
+
+const QR_WINDOW_MS = 30_000;
+
+const useCountdown = (expiresAt) => {
+  const [remaining, setRemaining] = useState(() =>
+    expiresAt ? Math.max(0, expiresAt - Date.now()) : 0,
+  );
+
+  useEffect(() => {
+    if (!expiresAt) return;
+    const tick = () => setRemaining(Math.max(0, expiresAt - Date.now()));
+    tick();
+    const id = setInterval(tick, 250);
+    return () => clearInterval(id);
+  }, [expiresAt]);
+
+  return remaining;
+};
 
 export const TeacherActiveSession = ({
   session,
@@ -11,8 +30,13 @@ export const TeacherActiveSession = ({
   const [subjectInput, setSubjectInput] = useState("");
   const qrRef = useRef(null);
 
+  const { current: qrToken, error: qrError } = useRotatingQrToken(session?.id);
+  const remainingMs = useCountdown(qrToken?.expiresAt);
+  const remainingSec = Math.ceil(remainingMs / 1000);
+  const progress = qrToken ? Math.min(1, remainingMs / QR_WINDOW_MS) : 0;
+
   const handleDownloadQR = useCallback(() => {
-    if (!qrRef.current || !session) return;
+    if (!qrRef.current || !session || !qrToken) return;
     const svgEl = qrRef.current.querySelector("svg");
     if (!svgEl) return;
 
@@ -22,31 +46,51 @@ export const TeacherActiveSession = ({
     });
     const url = URL.createObjectURL(svgBlob);
 
+    const expiresAt = new Date(qrToken.expiresAt);
+    const captionText = `Valid until ${expiresAt.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    })} — QR rotates every 30s`;
+
     const img = new Image();
     img.onload = () => {
       const canvas = document.createElement("canvas");
       const padding = 32;
+      const captionHeight = 32;
       canvas.width = img.width + padding * 2;
-      canvas.height = img.height + padding * 2;
+      canvas.height = img.height + padding * 2 + captionHeight;
       const ctx = canvas.getContext("2d");
 
-      // White background
       ctx.fillStyle = "#ffffff";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(img, padding, padding);
+
+      ctx.fillStyle = "#475569";
+      ctx.font = "500 13px 'Segoe UI', Arial, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(
+        captionText,
+        canvas.width / 2,
+        padding + img.height + 22,
+      );
 
       URL.revokeObjectURL(url);
 
       const pngUrl = canvas.toDataURL("image/png");
       const a = document.createElement("a");
       a.href = pngUrl;
-      a.download = `QR_${session.subject.replace(/\s+/g, "_")}_${new Date().toISOString().slice(0, 10)}.png`;
+      const stamp = expiresAt
+        .toISOString()
+        .slice(0, 19)
+        .replace(/[:T]/g, "-");
+      a.download = `QR_${session.subject.replace(/\s+/g, "_")}_${stamp}.png`;
       document.body.appendChild(a);
       a.click();
       a.remove();
     };
     img.src = url;
-  }, [session]);
+  }, [session, qrToken]);
 
   if (!session) {
     return (
@@ -130,28 +174,53 @@ export const TeacherActiveSession = ({
 
         <div
           ref={qrRef}
-          className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 transform transition-transform hover:scale-105 duration-300 mb-4"
+          className="relative bg-white p-4 rounded-2xl shadow-sm border border-slate-100 transition-transform duration-300 mb-4"
         >
-          <QRCodeSVG
-            value={session.id}
-            size={200}
-            level="H"
-            includeMargin={false}
-            className="w-full max-w-[240px] h-auto"
-          />
+          {qrToken ? (
+            <QRCodeSVG
+              value={qrToken.token}
+              size={200}
+              level="H"
+              includeMargin={false}
+              className="w-full max-w-[240px] h-auto"
+            />
+          ) : (
+            <div className="w-[200px] h-[200px] flex items-center justify-center text-slate-400 text-sm font-medium">
+              {qrError ? "Reconnecting..." : "Generating QR..."}
+            </div>
+          )}
         </div>
+
+        {qrToken && (
+          <div className="flex items-center gap-2 mb-3">
+            <div className="relative h-2 w-40 bg-slate-100 rounded-full overflow-hidden">
+              <div
+                className={`absolute inset-y-0 left-0 rounded-full transition-[width] duration-250 ease-linear ${
+                  remainingSec <= 10
+                    ? "bg-amber-500"
+                    : "bg-gradient-to-r from-indigo-500 to-violet-500"
+                }`}
+                style={{ width: `${progress * 100}%` }}
+              />
+            </div>
+            <span className="text-xs font-bold tabular-nums text-slate-600 min-w-[28px]">
+              {remainingSec}s
+            </span>
+          </div>
+        )}
 
         <button
           onClick={handleDownloadQR}
-          className="inline-flex items-center gap-2 px-4 py-2 mb-4 text-sm font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 rounded-xl hover:bg-indigo-100 transition-colors active:scale-95"
+          disabled={!qrToken}
+          className="inline-flex items-center gap-2 px-4 py-2 mb-4 text-sm font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 rounded-xl hover:bg-indigo-100 transition-colors active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Download className="w-4 h-4" />
           Download QR
         </button>
 
         <p className="text-sm font-medium text-slate-500 text-center px-4 max-w-xs">
-          Students must scan this code using their GeoAttend app while in the
-          classroom.
+          This QR rotates every 30 seconds. Students should scan it live from
+          the projector while inside the classroom.
         </p>
       </div>
 

@@ -18,6 +18,14 @@ router.get(
   sessionController.getActiveSession,
 );
 
+// Issue a short-lived signed QR token for the teacher's active session
+router.get(
+  "/:sessionId/qr-token",
+  verifyToken,
+  isTeacher,
+  sessionController.issueQrToken,
+);
+
 // Get all attendance records for a specific session
 router.get(
   "/:sessionId/attendance",

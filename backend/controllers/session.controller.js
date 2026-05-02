@@ -21,6 +21,18 @@ exports.endSession = async (req, res, next) => {
   }
 };
 
+exports.issueQrToken = async (req, res, next) => {
+  try {
+    const result = await sessionService.issueQrToken(
+      req.user.id,
+      req.params.sessionId,
+    );
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
 exports.getActiveSession = async (req, res, next) => {
   try {
     const result = await sessionService.getActiveSession(req.user.id);

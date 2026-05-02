@@ -48,6 +48,7 @@ model Attendance {
   scannedAt         DateTime @default(now())
   distanceMeters    Float
   deviceFingerprint String?
+  qrTimestamp       BigInt?
   isLeaveApproved   Boolean  @default(false)
 
   @@unique([sessionId, studentId]) // A student can only mark attendance once per session

@@ -81,7 +81,7 @@ export const useStudentDashboard = () => {
     }
   }, [status]);
 
-  const processAttendance = (sessionId) => {
+  const processAttendance = (qrToken) => {
     setStatus("geolocating");
     setErrorMessage("");
 
@@ -99,7 +99,7 @@ export const useStudentDashboard = () => {
         try {
           const { latitude, longitude } = position.coords;
           const res = await attendanceService.markAttendance(
-            sessionId,
+            qrToken,
             latitude,
             longitude,
             fingerprint,

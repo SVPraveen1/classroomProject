@@ -1,5 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
 const leaveService = require("./leave.service");
+const qrToken = require("../utils/qrToken");
 
 const prisma = new PrismaClient();
 
@@ -50,6 +51,27 @@ class SessionService {
     });
 
     return { message: "Session ended successfully" };
+  }
+
+  async issueQrToken(teacherId, sessionId) {
+    const session = await prisma.session.findUnique({
+      where: { id: sessionId },
+      select: { teacherId: true, isActive: true },
+    });
+
+    if (!session || session.teacherId !== teacherId) {
+      const error = new Error("Session not found.");
+      error.status = 404;
+      throw error;
+    }
+
+    if (!session.isActive) {
+      const error = new Error("Session has ended.");
+      error.status = 410;
+      throw error;
+    }
+
+    return qrToken.sign(sessionId);
   }
 
   async getActiveSession(teacherId) {
