@@ -1,5 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { sessionService } from "../services/session.service";
+
+const POLL_INTERVAL_MS = 4000; // Poll every 4 seconds for near-real-time updates
 
 export const useTeacherDashboard = () => {
   const [session, setSession] = useState(null);
@@ -12,7 +14,22 @@ export const useTeacherDashboard = () => {
   const [allStudents, setAllStudents] = useState([]);
   const [selectedSubject, setSelectedSubject] = useState(null);
 
-  const fetchSessionData = async () => {
+  // Keep a ref to the latest session so the polling interval never reads a stale closure
+  const sessionRef = useRef(session);
+  useEffect(() => {
+    sessionRef.current = session;
+  }, [session]);
+
+  const fetchAttendees = useCallback(async (sessionId) => {
+    try {
+      const res = await sessionService.getSessionAttendees(sessionId);
+      setAttendees(res.attendees || []);
+    } catch (err) {
+      console.error("Failed to fetch attendance", err);
+    }
+  }, []);
+
+  const fetchSessionData = useCallback(async () => {
     try {
       const res = await sessionService.getActiveSession();
       if (res.session) {
@@ -20,22 +37,14 @@ export const useTeacherDashboard = () => {
         fetchAttendees(res.session.id);
       } else {
         setSession(null);
+        setAttendees([]);
       }
     } catch (err) {
       console.error("Failed to fetch session", err);
     }
-  };
+  }, [fetchAttendees]);
 
-  const fetchAttendees = async (sessionId) => {
-    try {
-      const res = await sessionService.getSessionAttendees(sessionId);
-      setAttendees(res.attendees || []);
-    } catch (err) {
-      console.error("Failed to fetch attendance", err);
-    }
-  };
-
-  const fetchHistory = async () => {
+  const fetchHistory = useCallback(async () => {
     try {
       const res = await sessionService.getSessionHistory();
       setSubjects(res.subjects || []);
@@ -43,18 +52,22 @@ export const useTeacherDashboard = () => {
     } catch (err) {
       console.error("Failed to fetch history", err);
     }
-  };
+  }, []);
 
+  // Initial data fetch + attendee polling
   useEffect(() => {
     fetchSessionData();
     fetchHistory();
+
     const interval = setInterval(() => {
-      if (session) {
-        fetchAttendees(session.id);
+      const currentSession = sessionRef.current; // Always read the latest value
+      if (currentSession) {
+        fetchAttendees(currentSession.id);
       }
-    }, 10000);
+    }, POLL_INTERVAL_MS);
+
     return () => clearInterval(interval);
-  }, [session?.id]);
+  }, [fetchSessionData, fetchAttendees, fetchHistory]);
 
   const startSession = (subject) => {
     setLoading(true);

@@ -84,9 +84,14 @@ class SessionService {
   async getSessionAttendees(sessionId) {
     const attendees = await prisma.attendance.findMany({
       where: { sessionId },
-      include: {
+      select: {
+        id: true,
+        scannedAt: true,
+        distanceMeters: true,
+        isLeaveApproved: true,
         student: { select: { name: true, email: true, rollNo: true } },
       },
+      orderBy: { scannedAt: "desc" },
     });
     return { attendees };
   }
