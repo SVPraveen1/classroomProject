@@ -10,9 +10,9 @@ import {
   XCircle,
   ArrowUp,
   ArrowDown,
-  FileText,
   MessageSquare,
   X,
+  Search,
 } from "lucide-react";
 import { formatDate, formatTimeOnly } from "../../utils/dateUtils";
 import { sessionService } from "../../services/session.service";
@@ -28,6 +28,7 @@ export const TeacherSessionList = ({
   const [expandedSession, setExpandedSession] = useState(null);
   const [isExporting, setIsExporting] = useState(false);
   const [isAscending, setIsAscending] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Local overrides for optimistic UI: key = "sessionId-studentId", value = "PRESENT" | "ABSENT"
   const [localOverrides, setLocalOverrides] = useState({});
@@ -40,8 +41,11 @@ export const TeacherSessionList = ({
 
   // Fetch leave requests when session is expanded
   useEffect(() => {
-    if (expandedSession && !sessionLeaveRequests[expandedSession]) {
-      fetchSessionLeaveRequests(expandedSession);
+    if (expandedSession) {
+      setSearchQuery(""); // Clear search when expanding a new session
+      if (!sessionLeaveRequests[expandedSession]) {
+        fetchSessionLeaveRequests(expandedSession);
+      }
     }
   }, [expandedSession]);
 
@@ -442,8 +446,28 @@ export const TeacherSessionList = ({
                                   </div>
                                 )}
 
+                              {/* Search Input */}
+                              <div className="relative mb-2">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                  <Search className="h-4 w-4 text-gray-400" />
+                                </div>
+                                <input
+                                  type="text"
+                                  placeholder="Search by name, roll number, or email..."
+                                  value={searchQuery}
+                                  onChange={(e) => setSearchQuery(e.target.value)}
+                                  className="pl-9 w-full md:max-w-md px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm transition-colors"
+                                />
+                              </div>
+
                               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {allStudents.map((student) => {
+                                {allStudents
+                                  .filter(student => 
+                                    (student.name || "").toLowerCase().includes(searchQuery.toLowerCase()) || 
+                                    (student.rollNo || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                    (student.email || "").toLowerCase().includes(searchQuery.toLowerCase())
+                                  )
+                                  .map((student) => {
                                   const record = s.attendees.find(
                                     (a) => a.id === student.id,
                                   );
