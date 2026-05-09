@@ -3,7 +3,7 @@ import { QRCodeSVG } from "qrcode.react";
 import { MapPin, Users, CheckCircle2, BookOpen, Download } from "lucide-react";
 import { useRotatingQrToken } from "../../hooks/useRotatingQrToken";
 
-const QR_WINDOW_MS = 30_000;
+const QR_WINDOW_MS = 10_000;
 
 const useCountdown = (expiresAt) => {
   const [remaining, setRemaining] = useState(() =>
@@ -51,7 +51,7 @@ export const TeacherActiveSession = ({
       hour: "2-digit",
       minute: "2-digit",
       second: "2-digit",
-    })} — QR rotates every 30s`;
+    })} — QR rotates every 10s`;
 
     const img = new Image();
     img.onload = () => {
@@ -196,7 +196,7 @@ export const TeacherActiveSession = ({
             <div className="relative h-2 w-40 bg-slate-100 rounded-full overflow-hidden">
               <div
                 className={`absolute inset-y-0 left-0 rounded-full transition-[width] duration-250 ease-linear ${
-                  remainingSec <= 10
+                  remainingSec <= 3
                     ? "bg-amber-500"
                     : "bg-gradient-to-r from-indigo-500 to-violet-500"
                 }`}
@@ -219,7 +219,7 @@ export const TeacherActiveSession = ({
         </button>
 
         <p className="text-sm font-medium text-slate-500 text-center px-4 max-w-xs">
-          This QR rotates every 30 seconds. Students should scan it live from
+          This QR rotates every 10 seconds. Students should scan it live from
           the projector while inside the classroom.
         </p>
       </div>

@@ -1,6 +1,6 @@
 const crypto = require("crypto");
 
-const VALIDITY_MS = 30_000;
+const VALIDITY_MS = 10_000;
 const GRACE_MS = 10_000;
 const MAX_AGE_MS = VALIDITY_MS + GRACE_MS;
 const DOMAIN = "qr:v1";
